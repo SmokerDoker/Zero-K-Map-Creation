@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { MapProjectSummary } from '@zk-map/shared-types'
 
 interface NewProjectDialogProps {
@@ -15,6 +15,12 @@ export function NewProjectDialog({ onClose, onCreated }: NewProjectDialogProps):
   const [parentDir, setParentDir] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
+
+  // Vorbelegung mit dem OS-spezifischen Standardpfad (z.B. %APPDATA%\Zero-K Map Creator\Projects),
+  // manuelle Auswahl über "Wählen…" bleibt weiterhin möglich.
+  useEffect(() => {
+    window.api.getDefaultProjectsDir().then(setParentDir)
+  }, [])
 
   async function handleChooseFolder(): Promise<void> {
     const dir = await window.api.pickParentDir()

@@ -10,6 +10,7 @@ export interface NewProjectInput {
 }
 
 const api = {
+  getDefaultProjectsDir: (): Promise<string> => ipcRenderer.invoke('project:getDefaultProjectsDir'),
   pickParentDir: (): Promise<string | null> => ipcRenderer.invoke('project:pickParentDir'),
   createProject: (input: NewProjectInput): Promise<MapProjectSummary> =>
     ipcRenderer.invoke('project:create', input),

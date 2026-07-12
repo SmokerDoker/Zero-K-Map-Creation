@@ -1,6 +1,12 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'node:path'
+import { mkdir } from 'node:fs/promises'
 import { createProject, openProject, type CreateProjectInput } from './project'
+
+/** Per-OS default location for user-created map projects (e.g. %APPDATA%\Zero-K Map Creator\Projects on Windows). */
+function getDefaultProjectsDir(): string {
+  return join(app.getPath('userData'), 'Projects')
+}
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -30,10 +36,13 @@ function createWindow(): void {
   }
 }
 
+ipcMain.handle('project:getDefaultProjectsDir', () => getDefaultProjectsDir())
+
 ipcMain.handle('project:pickParentDir', async () => {
   const result = await dialog.showOpenDialog({
     properties: ['openDirectory', 'createDirectory'],
-    title: 'Speicherort für das neue Projekt wählen'
+    title: 'Speicherort für das neue Projekt wählen',
+    defaultPath: getDefaultProjectsDir()
   })
   if (result.canceled || result.filePaths.length === 0) return null
   return result.filePaths[0]
@@ -46,13 +55,15 @@ ipcMain.handle('project:create', async (_event, input: CreateProjectInput) => {
 ipcMain.handle('project:pickAndOpen', async () => {
   const result = await dialog.showOpenDialog({
     properties: ['openDirectory'],
-    title: 'Projektordner (.zkmap) öffnen'
+    title: 'Projektordner (.zkmap) öffnen',
+    defaultPath: getDefaultProjectsDir()
   })
   if (result.canceled || result.filePaths.length === 0) return null
   return openProject(result.filePaths[0])
 })
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  await mkdir(getDefaultProjectsDir(), { recursive: true })
   createWindow()
 
   app.on('activate', () => {

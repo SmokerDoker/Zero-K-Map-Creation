@@ -2,9 +2,17 @@
   "name": "@zk-map/smf-format",
   "private": true,
   "version": "0.0.1",
-  "description": "Platform-independent reader/writer for the Spring engine SMF/SMT map binary formats. Implemented in Milestone 2.",
+  "description": "Platform-independent reader/writer for the Spring engine SMF/SMT map binary formats.",
   "license": "GPL-2.0-only",
   "type": "module",
   "main": "./src/index.ts",
-  "types": "./src/index.ts"
+  "types": "./src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  }
 }
