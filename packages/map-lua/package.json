@@ -1,0 +1,10 @@
+{
+  "name": "@zk-map/map-lua",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Generation and parsing of mapinfo.lua, map_startboxes.lua and map_metal_layout.lua. Implemented in Milestone 4.",
+  "license": "GPL-2.0-only",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts"
+}

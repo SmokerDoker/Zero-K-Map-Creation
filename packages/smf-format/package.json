@@ -1,0 +1,10 @@
+{
+  "name": "@zk-map/smf-format",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Platform-independent reader/writer for the Spring engine SMF/SMT map binary formats. Implemented in Milestone 2.",
+  "license": "GPL-2.0-only",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts"
+}

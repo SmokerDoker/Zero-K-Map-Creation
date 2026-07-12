@@ -1,0 +1,15 @@
+{
+  "name": "zero-k-map-creator",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Cross-platform desktop app for creating, editing, testing and publishing Zero-K custom maps.",
+  "license": "GPL-2.0-only",
+  "scripts": {
+    "dev": "pnpm --filter @zk-map/desktop dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

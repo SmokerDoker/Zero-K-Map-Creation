@@ -1,0 +1,10 @@
+{
+  "name": "@zk-map/shared-types",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Shared TypeScript interfaces for the Zero-K Map Creator project schema",
+  "license": "GPL-2.0-only",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts"
+}

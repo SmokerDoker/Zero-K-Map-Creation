@@ -1,0 +1,141 @@
+:root {
+  color-scheme: dark;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #14171c;
+  color: #e6e8eb;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  padding: 32px 40px 16px;
+  border-bottom: 1px solid #262b33;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.subtitle {
+  color: #9aa3b0;
+  margin: 6px 0 0;
+}
+
+.dashboard {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-direction: column;
+}
+
+button {
+  background: #2b6cb0;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 18px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #2c5282;
+}
+
+button[type='button']:not(.dashboard button) {
+  background: #333a45;
+}
+
+.error {
+  color: #f56565;
+}
+
+.project-path {
+  color: #6b7280;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dialog {
+  background: #1c2027;
+  border: 1px solid #2d333d;
+  border-radius: 10px;
+  padding: 24px;
+  width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dialog h2 {
+  margin: 0 0 8px;
+}
+
+.dialog label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: #9aa3b0;
+}
+
+.dialog input,
+.dialog textarea {
+  background: #14171c;
+  border: 1px solid #333a45;
+  border-radius: 6px;
+  color: #e6e8eb;
+  padding: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.size-row {
+  display: flex;
+  gap: 12px;
+}
+
+.size-row label {
+  flex: 1;
+}
+
+.folder-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #e6e8eb;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
