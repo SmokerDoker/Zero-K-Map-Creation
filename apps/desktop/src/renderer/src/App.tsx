@@ -1,9 +1,13 @@
 import { useState } from 'react'
 import type { MapProjectSummary } from '@zk-map/shared-types'
 import { NewProjectDialog } from './NewProjectDialog'
+import { TerrainEditor } from './TerrainEditor'
+
+type View = 'project' | 'terrain'
 
 function App(): JSX.Element {
   const [project, setProject] = useState<MapProjectSummary | null>(null)
+  const [view, setView] = useState<View>('project')
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -15,6 +19,10 @@ function App(): JSX.Element {
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     }
+  }
+
+  if (project && view === 'terrain') {
+    return <TerrainEditor project={project} onBack={() => setView('project')} />
   }
 
   if (project) {
@@ -29,7 +37,15 @@ function App(): JSX.Element {
         <main>
           <p>{project.description || 'Keine Beschreibung.'}</p>
           <p className="project-path">{project.projectPath}</p>
-          <button onClick={() => setProject(null)}>Zurück zum Dashboard</button>
+          <button onClick={() => setView('terrain')}>Terrain bearbeiten</button>
+          <button
+            onClick={() => {
+              setProject(null)
+              setView('project')
+            }}
+          >
+            Zurück zum Dashboard
+          </button>
         </main>
       </div>
     )

@@ -15,7 +15,11 @@ const api = {
   createProject: (input: NewProjectInput): Promise<MapProjectSummary> =>
     ipcRenderer.invoke('project:create', input),
   pickAndOpenProject: (): Promise<MapProjectSummary | null> =>
-    ipcRenderer.invoke('project:pickAndOpen')
+    ipcRenderer.invoke('project:pickAndOpen'),
+  loadTerrain: (projectPath: string, width: number, height: number): Promise<Float32Array> =>
+    ipcRenderer.invoke('terrain:load', projectPath, width, height),
+  saveTerrain: (projectPath: string, heights: Float32Array): Promise<void> =>
+    ipcRenderer.invoke('terrain:save', projectPath, heights)
 }
 
 contextBridge.exposeInMainWorld('api', api)

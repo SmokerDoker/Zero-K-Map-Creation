@@ -139,3 +139,76 @@ button[type='button']:not(.dashboard button) {
   gap: 8px;
   margin-top: 8px;
 }
+
+.terrain-editor {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.terrain-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  background: #1c2027;
+  border-bottom: 1px solid #2d333d;
+  flex-wrap: wrap;
+}
+
+.brush-modes {
+  display: flex;
+  gap: 6px;
+}
+
+.brush-modes button {
+  background: #333a45;
+}
+
+.brush-modes button.active {
+  background: #2b6cb0;
+}
+
+.slider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #9aa3b0;
+}
+
+.terrain-panes {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.terrain-pane {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-right: 1px solid #2d333d;
+}
+
+.terrain-pane:last-child {
+  border-right: none;
+}
+
+.heightmap-canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9aa3b0;
+}

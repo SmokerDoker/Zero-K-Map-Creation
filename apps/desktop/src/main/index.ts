@@ -2,6 +2,7 @@ import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'node:path'
 import { mkdir } from 'node:fs/promises'
 import { createProject, openProject, type CreateProjectInput } from './project'
+import { loadTerrain, saveTerrain } from './terrain'
 
 /** Per-OS default location for user-created map projects (e.g. %APPDATA%\Zero-K Map Creator\Projects on Windows). */
 function getDefaultProjectsDir(): string {
@@ -60,6 +61,17 @@ ipcMain.handle('project:pickAndOpen', async () => {
   })
   if (result.canceled || result.filePaths.length === 0) return null
   return openProject(result.filePaths[0])
+})
+
+ipcMain.handle(
+  'terrain:load',
+  async (_event, projectPath: string, width: number, height: number) => {
+    return loadTerrain(projectPath, width, height)
+  }
+)
+
+ipcMain.handle('terrain:save', async (_event, projectPath: string, heights: Float32Array) => {
+  await saveTerrain(projectPath, heights)
 })
 
 app.whenReady().then(async () => {
