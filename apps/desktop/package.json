@@ -4,12 +4,16 @@
   "version": "0.0.1",
   "description": "Zero-K Map Creator desktop application",
   "license": "GPL-2.0-only",
+  "author": "SmokerDoker",
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "dist:win": "electron-vite build && electron-builder --win --publish never",
+    "dist:mac": "electron-vite build && electron-builder --mac --publish never",
+    "dist:linux": "electron-vite build && electron-builder --linux --publish never"
   },
   "dependencies": {
     "@zk-map/shared-types": "workspace:*",

@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            dist-script: dist:win
+            artifact-glob: apps/desktop/release/*.exe
+          - os: macos-latest
+            dist-script: dist:mac
+            artifact-glob: apps/desktop/release/*.dmg
+          - os: ubuntu-latest
+            dist-script: dist:linux
+            artifact-glob: |
+              apps/desktop/release/*.AppImage
+              apps/desktop/release/*.deb
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build installer
+        run: pnpm --filter @zk-map/desktop ${{ matrix.dist-script }}
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zero-k-map-creator-${{ matrix.os }}
+          path: ${{ matrix.artifact-glob }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+          draft: true
+          generate_release_notes: true

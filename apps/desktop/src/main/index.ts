@@ -145,6 +145,13 @@ ipcMain.handle('shell:showInFolder', (_event, targetPath: string) => {
   shell.showItemInFolder(targetPath)
 })
 
+ipcMain.handle('shell:openExternal', (_event, url: string) => {
+  if (!url.startsWith('https://')) {
+    throw new Error(`Nur https-URLs dürfen extern geöffnet werden: ${url}`)
+  }
+  return shell.openExternal(url)
+})
+
 ipcMain.handle('zk:detectInstallations', () => detectZkInstallations())
 
 ipcMain.handle('zk:pickInstallDir', async () => {

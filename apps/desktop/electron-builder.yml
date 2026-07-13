@@ -1,0 +1,54 @@
+appId: org.zerokmapcreator.app
+productName: Zero-K Map Creator
+directories:
+  output: release
+  buildResources: build
+
+# electron-vite's build output — everything the packaged app needs to run.
+files:
+  - out/**/*
+  - package.json
+
+asarUnpack:
+  # 7za binaries must stay on disk (unpacked) — they're spawned as a separate process and can't
+  # be executed straight out of an asar archive.
+  - '**/node_modules/7zip-bin/**/*'
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: '${productName}-${version}-setup.${ext}'
+
+nsis:
+  oneClick: true
+  perMachine: false
+  allowToChangeInstallationDirectory: false
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  category: public.app-category.developer-tools
+  artifactName: '${productName}-${version}-${arch}.${ext}'
+
+dmg:
+  artifactName: '${productName}-${version}-${arch}.${ext}'
+
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+  category: Development
+  artifactName: '${productName}-${version}-${arch}.${ext}'
+
+# No auto-publish target configured yet — CI just uploads build artifacts to the GitHub Release,
+# it doesn't use electron-builder's own publish/auto-update mechanism.
+publish: null

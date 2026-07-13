@@ -8,6 +8,7 @@ import { MetalSpotEditor } from './MetalSpotEditor'
 import { FeatureEditor } from './FeatureEditor'
 import { CompileView } from './CompileView'
 import { TestInZkView } from './TestInZkView'
+import { PublishView } from './PublishView'
 
 type View =
   | 'project'
@@ -18,6 +19,7 @@ type View =
   | 'features'
   | 'compile'
   | 'test'
+  | 'publish'
 
 function App(): JSX.Element {
   const [project, setProject] = useState<MapProjectSummary | null>(null)
@@ -63,6 +65,10 @@ function App(): JSX.Element {
     return <TestInZkView project={project} onBack={() => setView('project')} />
   }
 
+  if (project && view === 'publish') {
+    return <PublishView project={project} onBack={() => setView('project')} />
+  }
+
   if (project) {
     return (
       <div className="app">
@@ -83,6 +89,7 @@ function App(): JSX.Element {
             <button onClick={() => setView('features')}>Features</button>
             <button onClick={() => setView('compile')}>Kompilieren</button>
             <button onClick={() => setView('test')}>In Zero-K testen</button>
+            <button onClick={() => setView('publish')}>Veröffentlichen</button>
           </div>
           <button
             onClick={() => {

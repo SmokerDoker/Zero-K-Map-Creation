@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "description": "Cross-platform desktop app for creating, editing, testing and publishing Zero-K custom maps.",
   "license": "GPL-2.0-only",
+  "packageManager": "pnpm@11.12.0",
   "scripts": {
     "dev": "pnpm --filter @zk-map/desktop dev",
     "build": "pnpm -r build",

@@ -53,7 +53,8 @@ const api = {
     ipcRenderer.invoke('zk:detectInstallations'),
   pickZkInstallDir: (): Promise<ZkInstallation | null> => ipcRenderer.invoke('zk:pickInstallDir'),
   testInZeroK: (projectPath: string, installation: ZkInstallation): Promise<TestInZeroKResult> =>
-    ipcRenderer.invoke('zk:testMap', projectPath, installation)
+    ipcRenderer.invoke('zk:testMap', projectPath, installation),
+  openExternal: (url: string): Promise<void> => ipcRenderer.invoke('shell:openExternal', url)
 }
 
 contextBridge.exposeInMainWorld('api', api)
