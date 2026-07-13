@@ -1,25 +1,12 @@
 import { useState } from 'react'
 import type { MapProjectSummary } from '@zk-map/shared-types'
 import { NewProjectDialog } from './NewProjectDialog'
-import { TerrainEditor } from './TerrainEditor'
-import { MapInfoForm } from './MapInfoForm'
-import { StartboxEditor } from './StartboxEditor'
-import { MetalSpotEditor } from './MetalSpotEditor'
-import { FeatureEditor } from './FeatureEditor'
+import { MapWorkspace } from './MapWorkspace'
 import { CompileView } from './CompileView'
 import { TestInZkView } from './TestInZkView'
 import { PublishView } from './PublishView'
 
-type View =
-  | 'project'
-  | 'terrain'
-  | 'mapinfo'
-  | 'startboxes'
-  | 'metal'
-  | 'features'
-  | 'compile'
-  | 'test'
-  | 'publish'
+type View = 'project' | 'workspace' | 'compile' | 'test' | 'publish'
 
 function App(): JSX.Element {
   const [project, setProject] = useState<MapProjectSummary | null>(null)
@@ -37,24 +24,8 @@ function App(): JSX.Element {
     }
   }
 
-  if (project && view === 'terrain') {
-    return <TerrainEditor project={project} onBack={() => setView('project')} />
-  }
-
-  if (project && view === 'mapinfo') {
-    return <MapInfoForm project={project} onBack={() => setView('project')} />
-  }
-
-  if (project && view === 'startboxes') {
-    return <StartboxEditor project={project} onBack={() => setView('project')} />
-  }
-
-  if (project && view === 'metal') {
-    return <MetalSpotEditor project={project} onBack={() => setView('project')} />
-  }
-
-  if (project && view === 'features') {
-    return <FeatureEditor project={project} onBack={() => setView('project')} />
+  if (project && view === 'workspace') {
+    return <MapWorkspace project={project} onBack={() => setView('project')} />
   }
 
   if (project && view === 'compile') {
@@ -82,11 +53,7 @@ function App(): JSX.Element {
           <p>{project.description || 'Keine Beschreibung.'}</p>
           <p className="project-path">{project.projectPath}</p>
           <div className="project-actions">
-            <button onClick={() => setView('terrain')}>Terrain bearbeiten</button>
-            <button onClick={() => setView('mapinfo')}>Kartendaten</button>
-            <button onClick={() => setView('startboxes')}>Startboxen</button>
-            <button onClick={() => setView('metal')}>Metal-Spots</button>
-            <button onClick={() => setView('features')}>Features</button>
+            <button onClick={() => setView('workspace')}>Karte bearbeiten</button>
             <button onClick={() => setView('compile')}>Kompilieren</button>
             <button onClick={() => setView('test')}>In Zero-K testen</button>
             <button onClick={() => setView('publish')}>Veröffentlichen</button>

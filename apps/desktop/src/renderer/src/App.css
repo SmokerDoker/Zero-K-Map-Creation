@@ -169,6 +169,10 @@ button[type='button']:not(.dashboard button) {
   background: #2b6cb0;
 }
 
+.brush-modes.vertical {
+  flex-direction: column;
+}
+
 .slider {
   display: flex;
   align-items: center;
@@ -194,15 +198,6 @@ button[type='button']:not(.dashboard button) {
 
 .terrain-pane:last-child {
   border-right: none;
-}
-
-.heightmap-canvas {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  image-rendering: pixelated;
-  cursor: crosshair;
-  touch-action: none;
 }
 
 .loading {
@@ -239,6 +234,11 @@ button[type='button']:not(.dashboard button) {
   margin-bottom: 24px;
 }
 
+.form-grid.vertical {
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
 .form-field {
   display: flex;
   flex-direction: column;
@@ -264,54 +264,18 @@ button[type='button']:not(.dashboard button) {
   font-size: 0.75rem;
 }
 
-.startbox-pane {
-  flex: 1;
-  display: flex;
-  gap: 24px;
-  padding: 24px;
-  overflow: auto;
-}
-
-.startbox-svg {
-  background: #10131a;
-  border: 1px solid #2d333d;
-  border-radius: 8px;
-  flex-shrink: 0;
-  cursor: crosshair;
-  touch-action: none;
-}
-
-.map-bounds {
-  fill: #181c23;
-  stroke: #333a45;
-}
-
-.handle {
-  cursor: grab;
-  stroke: #0b0d11;
-  stroke-width: 1.5;
-}
-
-.handle:active {
-  cursor: grabbing;
-}
-
-.metal-spot {
-  fill: #f0b429;
-}
-
-.metal-spot.selected {
-  fill: #ffd166;
-  stroke: #fff;
-  stroke-width: 2.5;
-}
-
 .startbox-legend,
 .metal-side-panel {
   display: flex;
   flex-direction: column;
   gap: 12px;
   min-width: 220px;
+}
+
+.terrain-pane + .metal-side-panel {
+  padding: 20px 16px;
+  overflow-y: auto;
+  border-left: 1px solid #2d333d;
 }
 
 .legend-row {
@@ -348,25 +312,6 @@ button[type='button']:not(.dashboard button) {
 
 .hint.warning {
   color: #f0b429;
-}
-
-.feature-marker {
-  cursor: grab;
-}
-
-.feature-marker path {
-  stroke: #0b0d11;
-  stroke-width: 1.5;
-}
-
-.feature-marker.selected path {
-  stroke: #fff;
-  stroke-width: 2.5;
-}
-
-.feature-marker.missing-type path {
-  opacity: 0.55;
-  stroke-dasharray: 2 2;
 }
 
 .compile-result {
