@@ -6,6 +6,19 @@ interface NewProjectDialogProps {
   onCreated: (project: MapProjectSummary) => void
 }
 
+// Zero-K/Spring requires the map's width/height in squares to be divisible by 128, and one
+// "NxN" size unit here is 64 squares — so N itself must be even (N*64 % 128 === 0 <=> N even).
+function isValidSize(n: number): boolean {
+  return Number.isInteger(n) && n >= 2 && n % 2 === 0
+}
+
+// There's no reliably documented hard maximum for Zero-K/Spring itself — old forum posts cite
+// wildly different numbers (16x16 to 58x58) that are contradicted by existing official maps
+// larger than that. This threshold is only a soft warning about OUR OWN compiler (Milestone 6),
+// whose diffuse-texture generation scales quadratically with map size and hasn't been tested
+// against anything this large — not a claim about what Zero-K itself supports.
+const LARGE_SIZE_WARNING_THRESHOLD = 20
+
 export function NewProjectDialog({ onClose, onCreated }: NewProjectDialogProps): JSX.Element {
   const [name, setName] = useState('')
   const [author, setAuthor] = useState('')
@@ -35,6 +48,10 @@ export function NewProjectDialog({ onClose, onCreated }: NewProjectDialogProps):
     }
     if (!name.trim()) {
       setError('Bitte einen Projektnamen eingeben.')
+      return
+    }
+    if (!isValidSize(width) || !isValidSize(height)) {
+      setError('Breite und Höhe müssen gerade Zahlen ≥ 2 sein (Zero-K-Anforderung, siehe Hinweis).')
       return
     }
 
@@ -78,24 +95,38 @@ export function NewProjectDialog({ onClose, onCreated }: NewProjectDialogProps):
 
         <div className="size-row">
           <label>
-            Breite (Squares)
+            Breite (z.B. 8 für "8x8")
             <input
               type="number"
               min={2}
+              step={2}
               value={width}
               onChange={(e) => setWidth(Number(e.target.value))}
             />
           </label>
           <label>
-            Höhe (Squares)
+            Höhe (z.B. 8 für "8x8")
             <input
               type="number"
               min={2}
+              step={2}
               value={height}
               onChange={(e) => setHeight(Number(e.target.value))}
             />
           </label>
         </div>
+        <p className="hint">
+          Zero-K-Größenangabe: 1 Einheit = 64 Squares (8 → 512×512 Squares). Muss jeweils eine
+          gerade Zahl sein, sonst lehnt Spring die Karte beim Kompilieren ab.
+        </p>
+        {(width > LARGE_SIZE_WARNING_THRESHOLD || height > LARGE_SIZE_WARNING_THRESHOLD) && (
+          <p className="hint warning">
+            Große Karten wurden mit unserem Compiler noch nicht getestet — die
+            Textur-Generierung wird mit der Fläche quadratisch langsamer und könnte sehr lange
+            dauern oder hängen bleiben. (Das ist keine Aussage über Zero-Ks eigenes Limit, das
+            konnte ich nicht verlässlich klären.)
+          </p>
+        )}
 
         <label>
           Speicherort
