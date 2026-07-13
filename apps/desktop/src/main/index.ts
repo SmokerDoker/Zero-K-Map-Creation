@@ -17,6 +17,8 @@ import {
 import type { MetalLayout, StartboxConfig } from '@zk-map/map-lua'
 import type { FeatureLayout } from '@zk-map/shared-types'
 import { compileProject } from './compile'
+import { testInZeroK } from './test-in-zk'
+import { detectZkInstallations, validateManualPath, type ZkInstallation } from '@zk-map/zk-locator'
 
 /** Per-OS default location for user-created map projects (e.g. %APPDATA%\Zero-K Map Creator\Projects on Windows). */
 function getDefaultProjectsDir(): string {
@@ -142,6 +144,24 @@ ipcMain.handle('map:compile', async (_event, projectPath: string) => {
 ipcMain.handle('shell:showInFolder', (_event, targetPath: string) => {
   shell.showItemInFolder(targetPath)
 })
+
+ipcMain.handle('zk:detectInstallations', () => detectZkInstallations())
+
+ipcMain.handle('zk:pickInstallDir', async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openDirectory'],
+    title: 'Zero-K-Installationsordner wählen'
+  })
+  if (result.canceled || result.filePaths.length === 0) return null
+  return validateManualPath(result.filePaths[0])
+})
+
+ipcMain.handle(
+  'zk:testMap',
+  async (_event, projectPath: string, installation: ZkInstallation) => {
+    return testInZeroK(projectPath, installation)
+  }
+)
 
 app.whenReady().then(async () => {
   await mkdir(getDefaultProjectsDir(), { recursive: true })

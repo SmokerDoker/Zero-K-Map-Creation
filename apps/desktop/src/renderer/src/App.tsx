@@ -7,8 +7,17 @@ import { StartboxEditor } from './StartboxEditor'
 import { MetalSpotEditor } from './MetalSpotEditor'
 import { FeatureEditor } from './FeatureEditor'
 import { CompileView } from './CompileView'
+import { TestInZkView } from './TestInZkView'
 
-type View = 'project' | 'terrain' | 'mapinfo' | 'startboxes' | 'metal' | 'features' | 'compile'
+type View =
+  | 'project'
+  | 'terrain'
+  | 'mapinfo'
+  | 'startboxes'
+  | 'metal'
+  | 'features'
+  | 'compile'
+  | 'test'
 
 function App(): JSX.Element {
   const [project, setProject] = useState<MapProjectSummary | null>(null)
@@ -50,6 +59,10 @@ function App(): JSX.Element {
     return <CompileView project={project} onBack={() => setView('project')} />
   }
 
+  if (project && view === 'test') {
+    return <TestInZkView project={project} onBack={() => setView('project')} />
+  }
+
   if (project) {
     return (
       <div className="app">
@@ -69,6 +82,7 @@ function App(): JSX.Element {
             <button onClick={() => setView('metal')}>Metal-Spots</button>
             <button onClick={() => setView('features')}>Features</button>
             <button onClick={() => setView('compile')}>Kompilieren</button>
+            <button onClick={() => setView('test')}>In Zero-K testen</button>
           </div>
           <button
             onClick={() => {

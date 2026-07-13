@@ -2,9 +2,18 @@
   "name": "@zk-map/zk-locator",
   "private": true,
   "version": "0.0.1",
-  "description": "Detects local Zero-K installations (Steam and standalone) across Windows/macOS/Linux. Implemented in Milestone 7.",
+  "description": "Detects local Zero-K installations (Steam and standalone) across Windows/macOS/Linux.",
   "license": "GPL-2.0-only",
   "type": "module",
   "main": "./src/index.ts",
-  "types": "./src/index.ts"
+  "types": "./src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  }
 }

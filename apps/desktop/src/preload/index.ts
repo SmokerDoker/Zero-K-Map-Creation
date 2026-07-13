@@ -3,6 +3,8 @@ import type { FeatureLayout, MapProjectSummary } from '@zk-map/shared-types'
 import type { MetalLayout, StartboxConfig } from '@zk-map/map-lua'
 import type { GameplaySettings } from '../main/mapconfig'
 import type { CompileResult } from '../main/compile'
+import type { TestInZeroKResult } from '../main/test-in-zk'
+import type { ZkInstallation } from '@zk-map/zk-locator'
 
 export interface NewProjectInput {
   parentDir: string
@@ -46,7 +48,12 @@ const api = {
   compileProject: (projectPath: string): Promise<CompileResult> =>
     ipcRenderer.invoke('map:compile', projectPath),
   showInFolder: (targetPath: string): Promise<void> =>
-    ipcRenderer.invoke('shell:showInFolder', targetPath)
+    ipcRenderer.invoke('shell:showInFolder', targetPath),
+  detectZkInstallations: (): Promise<ZkInstallation[]> =>
+    ipcRenderer.invoke('zk:detectInstallations'),
+  pickZkInstallDir: (): Promise<ZkInstallation | null> => ipcRenderer.invoke('zk:pickInstallDir'),
+  testInZeroK: (projectPath: string, installation: ZkInstallation): Promise<TestInZeroKResult> =>
+    ipcRenderer.invoke('zk:testMap', projectPath, installation)
 }
 
 contextBridge.exposeInMainWorld('api', api)

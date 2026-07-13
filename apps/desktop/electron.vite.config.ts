@@ -6,7 +6,12 @@ import react from '@vitejs/plugin-react'
 // Vite pipeline to bundle directly. The main/preload builds only externalize real node_modules
 // dependencies — externalizing a workspace package would leave a `require("@zk-map/...")` in the
 // output that Node can't resolve (no .ts loader), so these must stay excluded and get bundled in.
-const WORKSPACE_PACKAGES = ['@zk-map/shared-types', '@zk-map/smf-format', '@zk-map/map-lua']
+const WORKSPACE_PACKAGES = [
+  '@zk-map/shared-types',
+  '@zk-map/smf-format',
+  '@zk-map/map-lua',
+  '@zk-map/zk-locator'
+]
 
 export default defineConfig({
   main: {

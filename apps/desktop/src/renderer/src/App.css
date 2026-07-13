@@ -382,3 +382,34 @@ ul.warning {
   margin: 0;
   padding-left: 18px;
 }
+
+.zk-install-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.zk-install-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #1c2027;
+  border: 1px solid #2d333d;
+  border-radius: 6px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.zk-install-path {
+  font-family: monospace;
+  font-size: 0.85rem;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+.zk-install-source {
+  color: #9aa3b0;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
