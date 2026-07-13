@@ -96,34 +96,33 @@ function TerrainMesh({
   )
 }
 
+// Both cameras stay mounted permanently and only `makeDefault` toggles between them, with a
+// single persistent OrbitControls reacting to whichever camera is currently default. Conditionally
+// rendering (mounting/unmounting) the camera+controls subtree per preset instead crashes on
+// switch: OrbitControls' underlying THREE.OrbitControls is constructed synchronously during commit
+// and can momentarily read an undefined default camera while the old subtree tears down and the
+// new one registers.
 function CameraRig({ preset }: { preset: CameraPreset }): JSX.Element {
-  if (preset === 'topdown') {
-    return (
-      <>
-        <OrthographicCamera
-          makeDefault
-          position={[0, 20, 0.001]}
-          up={[0, 0, -1]}
-          zoom={1}
-          left={-SCENE_SIZE * 0.7}
-          right={SCENE_SIZE * 0.7}
-          top={SCENE_SIZE * 0.7}
-          bottom={-SCENE_SIZE * 0.7}
-          near={0.1}
-          far={100}
-        />
-        <OrbitControls makeDefault enableRotate={false} target={[0, 0, 0]} />
-      </>
-    )
-  }
   return (
     <>
       <PerspectiveCamera
-        makeDefault
+        makeDefault={preset === 'orbit'}
         position={[SCENE_SIZE * 0.75, SCENE_SIZE * 0.65, SCENE_SIZE * 0.75]}
         fov={45}
       />
-      <OrbitControls makeDefault target={[0, 0, 0]} />
+      <OrthographicCamera
+        makeDefault={preset === 'topdown'}
+        position={[0, 20, 0.001]}
+        up={[0, 0, -1]}
+        zoom={1}
+        left={-SCENE_SIZE * 0.7}
+        right={SCENE_SIZE * 0.7}
+        top={SCENE_SIZE * 0.7}
+        bottom={-SCENE_SIZE * 0.7}
+        near={0.1}
+        far={100}
+      />
+      <OrbitControls makeDefault enableRotate={preset === 'orbit'} target={[0, 0, 0]} />
     </>
   )
 }
