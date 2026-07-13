@@ -16,7 +16,18 @@ export interface StartboxesOverlayProps {
   onHandleDown: (target: StartboxHandleTarget) => void
 }
 
-export const TEAM_COLORS = ['#4d7cff', '#ff5c5c']
+// Up to 8 distinguishable colors, covering typical Zero-K FFA player counts (e.g. 8x "1v1v1v...").
+// Cycles (via % in the callers) if a layout somehow has even more teams than that.
+export const TEAM_COLORS = [
+  '#4d7cff',
+  '#ff5c5c',
+  '#5ea25e',
+  '#e0a83c',
+  '#a56ee0',
+  '#e05c9e',
+  '#3ce0d0',
+  '#c9c9c9'
+]
 
 // Startboxes are a flat, gameplay-abstract region (not terrain-conforming in Zero-K itself), so
 // the whole box floats at a fixed height comfortably above any possible terrain — this keeps the

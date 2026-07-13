@@ -74,3 +74,45 @@ export function sampleTerrainHeight(
 export function worldToGrid(worldX: number, worldZ: number): [number, number] {
   return [worldX / ZK_SQUARE_SIZE_WORLD_UNITS, worldZ / ZK_SQUARE_SIZE_WORLD_UNITS]
 }
+
+/** Converts a brush radius (in heightmap grid-cell units, as used by applyTerrainBrush) into a
+ * scene-space radius, for drawing the brush cursor ring. */
+export function gridRadiusToSceneRadius(gridRadius: number, scale: SceneScale): number {
+  const worldRadius = gridRadius * ZK_SQUARE_SIZE_WORLD_UNITS
+  return worldRadius * (scale.sceneWidth / scale.worldWidth)
+}
+
+export interface MeshDecimation {
+  strideX: number
+  strideY: number
+  meshWidth: number
+  meshHeight: number
+}
+
+/** Shared decimation math for any grid-based mesh built from the (potentially huge) full-res
+ * heightmap — used by both the terrain mesh and the water mesh so they stay vertex-aligned. */
+export function computeMeshDecimation(
+  heightmapWidth: number,
+  heightmapHeight: number,
+  maxVertices: number
+): MeshDecimation {
+  const strideX = Math.max(1, Math.ceil((heightmapWidth - 1) / (maxVertices - 1)))
+  const strideY = Math.max(1, Math.ceil((heightmapHeight - 1) / (maxVertices - 1)))
+  const meshWidth = Math.floor((heightmapWidth - 1) / strideX) + 1
+  const meshHeight = Math.floor((heightmapHeight - 1) / strideY) + 1
+  return { strideX, strideY, meshWidth, meshHeight }
+}
+
+/**
+ * Where world-height 0 falls on the map's own minHeight..maxHeight scale, as a normalized (0..1)
+ * value usable with heightToSceneY() — or null if the map never dips below sea level at all.
+ * Per the Spring engine wiki (Mapdev:mapinfo.lua / Mapdev:water): water always sits at world
+ * elevation 0, terrain is placed above/below it purely via minHeight/maxHeight — there is no
+ * separate configurable "water level" field.
+ */
+export function computeWaterLevelNormalized(minHeight: number, maxHeight: number): number | null {
+  if (minHeight >= 0) return null
+  const range = maxHeight - minHeight
+  if (range <= 0) return null
+  return Math.max(0, Math.min(1, (0 - minHeight) / range))
+}

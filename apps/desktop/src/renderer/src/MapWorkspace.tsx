@@ -12,6 +12,7 @@ import { MapScene3D, type CameraPreset, type TerrainHit } from './mapWorkspace/M
 import { MetalSpotsOverlay } from './mapWorkspace/MetalSpotsOverlay'
 import { StartboxesOverlay, TEAM_COLORS, type StartboxHandleTarget } from './mapWorkspace/StartboxesOverlay'
 import { FeaturesOverlay } from './mapWorkspace/FeaturesOverlay'
+import { BrushCursor } from './mapWorkspace/BrushCursor'
 import { applyTerrainBrush, type BrushMode } from './mapWorkspace/terrainBrush'
 import { worldToGrid } from './mapWorkspace/sceneCoords'
 
@@ -84,6 +85,7 @@ export function MapWorkspace({ project, onBack }: MapWorkspaceProps): JSX.Elemen
   const [selectedFeatureId, setSelectedFeatureId] = useState<string | null>(null)
 
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const [hoverPoint, setHoverPoint] = useState<TerrainHit | null>(null)
 
   const isPaintingRef = useRef(false)
   const flattenTargetRef = useRef(0.5)
@@ -281,6 +283,47 @@ export function MapWorkspace({ project, onBack }: MapWorkspaceProps): JSX.Elemen
     setGameplay((prev) => (prev ? { ...prev, [key]: value } : prev))
   }
 
+  // New teams are spread around a circle (fixed 8-way division) so FFA layouts like Zero-K's
+  // "1v1v1v1v1v1v1v1" 8-player maps start with a usable, non-overlapping arrangement — each spot
+  // still needs to be dragged onto the mapper's actual intended hill/position afterwards.
+  function addStartboxTeam(): void {
+    setStartboxes((prev) => {
+      if (!prev) return prev
+      const index = prev.teams.length
+      const angle = (2 * Math.PI * index) / 8
+      const centerX = worldWidth / 2
+      const centerZ = worldHeight / 2
+      const orbitRadius = Math.min(worldWidth, worldHeight) * 0.32
+      const boxHalf = Math.min(worldWidth, worldHeight) * 0.08
+      const cx = centerX + Math.cos(angle) * orbitRadius
+      const cz = centerZ + Math.sin(angle) * orbitRadius
+      const box: Point2D[] = [
+        [cx - boxHalf, cz - boxHalf],
+        [cx + boxHalf, cz - boxHalf],
+        [cx + boxHalf, cz + boxHalf],
+        [cx - boxHalf, cz + boxHalf]
+      ]
+      const teams = [
+        ...prev.teams,
+        {
+          nameLong: `Team ${index + 1}`,
+          nameShort: `T${index + 1}`,
+          startpoints: [[cx, cz] as Point2D],
+          boxes: [box]
+        }
+      ]
+      return { teams, supportedPlayerCounts: [teams.length] }
+    })
+  }
+
+  function removeStartboxTeam(index: number): void {
+    setStartboxes((prev) => {
+      if (!prev) return prev
+      const teams = prev.teams.filter((_, ti) => ti !== index)
+      return { teams, supportedPlayerCounts: [teams.length] }
+    })
+  }
+
   const selectedMetalSpot =
     metalLayout && selectedMetalIndex !== null ? metalLayout.spots[selectedMetalIndex] : null
   const selectedFeature = features?.features.find((f) => f.id === selectedFeatureId) ?? null
@@ -317,11 +360,25 @@ export function MapWorkspace({ project, onBack }: MapWorkspaceProps): JSX.Elemen
               worldWidth={worldWidth}
               worldHeight={worldHeight}
               version={version}
+              minHeight={gameplay?.minHeight ?? -200}
+              maxHeight={gameplay?.maxHeight ?? 200}
               cameraPreset={cameraPreset}
               onTerrainDown={handleTerrainDown}
               onTerrainMove={handleTerrainMove}
               onTerrainUp={handleTerrainUp}
+              onTerrainHover={setHoverPoint}
             >
+              {mode === 'terrain' && (
+                <BrushCursor
+                  hover={hoverPoint}
+                  radius={brushRadius}
+                  heights={heightsRef.current}
+                  heightmapWidth={heightmapWidth}
+                  heightmapHeight={heightmapHeight}
+                  worldWidth={worldWidth}
+                  worldHeight={worldHeight}
+                />
+              )}
               {mode === 'metal' && metalLayout && (
                 <MetalSpotsOverlay
                   layout={metalLayout}
@@ -428,12 +485,20 @@ export function MapWorkspace({ project, onBack }: MapWorkspaceProps): JSX.Elemen
                 <p className="hint">Ecken und Startpunkte auf der Karte ziehen.</p>
                 <div className="startbox-legend">
                   {startboxes.teams.map((team, ti) => (
-                    <label key={ti} className="legend-row">
+                    <div key={ti} className="legend-row">
                       <span className="legend-swatch" style={{ background: TEAM_COLORS[ti % TEAM_COLORS.length] }} />
                       <input value={team.nameLong} onChange={(e) => renameStartboxTeam(ti, e.target.value)} />
-                    </label>
+                      <button onClick={() => removeStartboxTeam(ti)} disabled={startboxes.teams.length <= 1}>
+                        ✕
+                      </button>
+                    </div>
                   ))}
                 </div>
+                <button onClick={addStartboxTeam}>+ Team hinzufügen</button>
+                <p className="hint">
+                  Für FFA-Karten (z.B. 8x "1v1v1v...") einfach ein Team pro Spieler hinzufügen und
+                  jede Box auf ihren Hügel ziehen.
+                </p>
               </>
             )}
 

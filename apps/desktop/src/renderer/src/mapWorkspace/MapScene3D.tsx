@@ -1,8 +1,15 @@
 import { Canvas, type ThreeEvent } from '@react-three/fiber'
 import { OrbitControls, OrthographicCamera, PerspectiveCamera } from '@react-three/drei'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import * as THREE from 'three'
-import { computeSceneScale, heightToSceneY, sceneToWorld, SCENE_SIZE } from './sceneCoords'
+import {
+  computeMeshDecimation,
+  computeSceneScale,
+  computeWaterLevelNormalized,
+  heightToSceneY,
+  sceneToWorld,
+  SCENE_SIZE
+} from './sceneCoords'
 
 /** Cap on the displayed mesh resolution per axis — full-res data can be in the hundreds, which is
  * fine for painting precision but too many vertices to rebuild smoothly every brush stroke. */
@@ -23,14 +30,24 @@ export interface MapScene3DProps {
   worldHeight: number
   /** Bumped whenever the heightmap data changes, to trigger a mesh update. */
   version: number
+  /** Map's height range (matches the SMF header) — used to mask the sea-level water mesh. */
+  minHeight: number
+  maxHeight: number
   cameraPreset: CameraPreset
   onTerrainDown?: (hit: TerrainHit) => void
   onTerrainMove?: (hit: TerrainHit) => void
   onTerrainUp?: () => void
+  /** Fired on every hover (regardless of mouse button), null when the pointer leaves the terrain. */
+  onTerrainHover?: (hit: TerrainHit | null) => void
   children?: React.ReactNode
 }
 
-type TerrainMeshProps = Omit<MapScene3DProps, 'cameraPreset' | 'children'>
+type TerrainMeshProps = Omit<
+  MapScene3DProps,
+  'cameraPreset' | 'children' | 'minHeight' | 'maxHeight' | 'onTerrainHover'
+> & {
+  onTerrainHover?: (hit: TerrainHit | null) => void
+}
 
 function TerrainMesh({
   heightsRef,
@@ -41,14 +58,14 @@ function TerrainMesh({
   version,
   onTerrainDown,
   onTerrainMove,
-  onTerrainUp
+  onTerrainUp,
+  onTerrainHover
 }: TerrainMeshProps): JSX.Element {
   const scale = useMemo(() => computeSceneScale(worldWidth, worldHeight), [worldWidth, worldHeight])
-
-  const strideX = Math.max(1, Math.ceil((heightmapWidth - 1) / (MAX_PREVIEW_VERTICES - 1)))
-  const strideY = Math.max(1, Math.ceil((heightmapHeight - 1) / (MAX_PREVIEW_VERTICES - 1)))
-  const meshWidth = Math.floor((heightmapWidth - 1) / strideX) + 1
-  const meshHeight = Math.floor((heightmapHeight - 1) / strideY) + 1
+  const { strideX, strideY, meshWidth, meshHeight } = useMemo(
+    () => computeMeshDecimation(heightmapWidth, heightmapHeight, MAX_PREVIEW_VERTICES),
+    [heightmapWidth, heightmapHeight]
+  )
 
   const geometry = useMemo(() => {
     const geo = new THREE.PlaneGeometry(scale.sceneWidth, scale.sceneDepth, meshWidth - 1, meshHeight - 1)
@@ -90,11 +107,13 @@ function TerrainMesh({
       }}
       onPointerMove={(e) => {
         onTerrainMove?.(toHit(e))
+        onTerrainHover?.(toHit(e))
       }}
       onPointerUp={(e) => {
         if (e.button !== 0) return
         onTerrainUp?.()
       }}
+      onPointerLeave={() => onTerrainHover?.(null)}
     >
       <meshStandardMaterial color="#6f9457" side={THREE.DoubleSide} />
     </mesh>
@@ -139,14 +158,133 @@ function CameraRig({ preset }: { preset: CameraPreset }): JSX.Element {
   )
 }
 
-export function MapScene3D({ cameraPreset, children, ...terrainProps }: MapScene3DProps): JSX.Element {
+interface WaterMeshProps {
+  heightsRef: React.MutableRefObject<Float32Array>
+  heightmapWidth: number
+  heightmapHeight: number
+  worldWidth: number
+  worldHeight: number
+  minHeight: number
+  maxHeight: number
+  version: number
+}
+
+/**
+ * Water mesh masked to the terrain: per the Spring engine wiki, water always sits at world
+ * elevation 0 (terrain is placed above/below it purely via minHeight/maxHeight). Rendering that as
+ * one flat plane spanning the whole map looks wrong wherever the terrain is above sea level (a
+ * mountain still shows blue "underneath" it) — so instead this builds actual geometry on the same
+ * decimated grid as the terrain mesh and only includes grid cells whose four corners are all
+ * below the water line, leaving true holes wherever the ground doesn't dip underwater.
+ */
+function WaterMesh({
+  heightsRef,
+  heightmapWidth,
+  heightmapHeight,
+  worldWidth,
+  worldHeight,
+  minHeight,
+  maxHeight,
+  version
+}: WaterMeshProps): JSX.Element | null {
+  const scale = useMemo(() => computeSceneScale(worldWidth, worldHeight), [worldWidth, worldHeight])
+  const { strideX, strideY, meshWidth, meshHeight } = useMemo(
+    () => computeMeshDecimation(heightmapWidth, heightmapHeight, MAX_PREVIEW_VERTICES),
+    [heightmapWidth, heightmapHeight]
+  )
+  const waterLevel = computeWaterLevelNormalized(minHeight, maxHeight)
+  const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null)
+
+  useEffect(() => {
+    if (waterLevel === null) {
+      setGeometry(null)
+      return
+    }
+
+    const heights = heightsRef.current
+    const waterY = heightToSceneY(waterLevel)
+    const positions = new Float32Array(meshWidth * meshHeight * 3)
+    const underwater = new Uint8Array(meshWidth * meshHeight)
+
+    for (let gy = 0; gy < meshHeight; gy++) {
+      const srcY = Math.min(gy * strideY, heightmapHeight - 1)
+      for (let gx = 0; gx < meshWidth; gx++) {
+        const srcX = Math.min(gx * strideX, heightmapWidth - 1)
+        const h = heights[srcY * heightmapWidth + srcX] ?? 0.5
+        const idx = gy * meshWidth + gx
+        positions[idx * 3] = (gx / (meshWidth - 1)) * scale.sceneWidth - scale.sceneWidth / 2
+        positions[idx * 3 + 1] = waterY
+        positions[idx * 3 + 2] = (gy / (meshHeight - 1)) * scale.sceneDepth - scale.sceneDepth / 2
+        underwater[idx] = h < waterLevel ? 1 : 0
+      }
+    }
+
+    const indices: number[] = []
+    for (let gy = 0; gy < meshHeight - 1; gy++) {
+      for (let gx = 0; gx < meshWidth - 1; gx++) {
+        const a = gy * meshWidth + gx
+        const b = a + 1
+        const c = a + meshWidth
+        const d = c + 1
+        if (underwater[a] && underwater[b] && underwater[c] && underwater[d]) {
+          indices.push(a, c, b, b, c, d)
+        }
+      }
+    }
+
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    geo.setIndex(indices)
+    geo.computeVertexNormals()
+    setGeometry(geo)
+
+    return () => geo.dispose()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [heightmapWidth, heightmapHeight, meshWidth, meshHeight, strideX, strideY, scale, waterLevel, version])
+
+  if (!geometry) return null
+
+  return (
+    <mesh geometry={geometry}>
+      <meshStandardMaterial
+        color="#2f7fb0"
+        transparent
+        opacity={0.55}
+        depthWrite={false}
+        side={THREE.DoubleSide}
+        polygonOffset
+        polygonOffsetFactor={-1}
+        polygonOffsetUnits={-1}
+      />
+    </mesh>
+  )
+}
+
+export function MapScene3D({
+  cameraPreset,
+  children,
+  minHeight,
+  maxHeight,
+  onTerrainHover,
+  ...terrainProps
+}: MapScene3DProps): JSX.Element {
   return (
     <Canvas shadows>
       <color attach="background" args={['#1c2128']} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[6, 10, 4]} intensity={1.2} castShadow />
       <CameraRig preset={cameraPreset} />
-      <TerrainMesh {...terrainProps} />
+      <TerrainMesh {...terrainProps} onTerrainHover={onTerrainHover} />
+      <WaterMesh
+        heightsRef={terrainProps.heightsRef}
+        heightmapWidth={terrainProps.heightmapWidth}
+        heightmapHeight={terrainProps.heightmapHeight}
+        worldWidth={terrainProps.worldWidth}
+        worldHeight={terrainProps.worldHeight}
+        minHeight={minHeight}
+        maxHeight={maxHeight}
+        version={terrainProps.version}
+      />
       {children}
     </Canvas>
   )
