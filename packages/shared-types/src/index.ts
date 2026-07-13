@@ -28,9 +28,17 @@ export interface MapProjectSummary extends MapProjectMetadata {
 /** One Zero-K "NxN" size unit equals this many Spring map squares (e.g. "8x8" = 512x512 squares). */
 export const ZK_MAP_UNIT_SQUARES = 64
 
+/** World-unit distance between adjacent heightmap vertices (fixed by the SMF format). */
+export const ZK_SQUARE_SIZE_WORLD_UNITS = 8
+
 /** Number of heightmap vertices along one axis for a given "NxN" size unit (squares + 1). */
 export function heightmapResolution(sizeUnits: number): number {
   return sizeUnits * ZK_MAP_UNIT_SQUARES + 1
+}
+
+/** World-unit extent (the coordinate space startboxes/metal spots/features live in) for a given "NxN" size unit. */
+export function mapWorldSize(sizeUnits: number): number {
+  return sizeUnits * ZK_MAP_UNIT_SQUARES * ZK_SQUARE_SIZE_WORLD_UNITS
 }
 
 /** A project's editable terrain: a grid of normalized (0..1) elevation samples. */

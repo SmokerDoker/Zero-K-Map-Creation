@@ -3,6 +3,16 @@ import { join } from 'node:path'
 import { mkdir } from 'node:fs/promises'
 import { createProject, openProject, type CreateProjectInput } from './project'
 import { loadTerrain, saveTerrain } from './terrain'
+import {
+  loadGameplaySettings,
+  saveGameplaySettings,
+  loadStartboxes,
+  saveStartboxes,
+  loadMetalLayout,
+  saveMetalLayout,
+  type GameplaySettings
+} from './mapconfig'
+import type { MetalLayout, StartboxConfig } from '@zk-map/map-lua'
 
 /** Per-OS default location for user-created map projects (e.g. %APPDATA%\Zero-K Map Creator\Projects on Windows). */
 function getDefaultProjectsDir(): string {
@@ -73,6 +83,42 @@ ipcMain.handle(
 ipcMain.handle('terrain:save', async (_event, projectPath: string, heights: Float32Array) => {
   await saveTerrain(projectPath, heights)
 })
+
+ipcMain.handle('mapconfig:loadGameplaySettings', async (_event, projectPath: string) => {
+  return loadGameplaySettings(projectPath)
+})
+
+ipcMain.handle(
+  'mapconfig:saveGameplaySettings',
+  async (_event, projectPath: string, settings: GameplaySettings) => {
+    await saveGameplaySettings(projectPath, settings)
+  }
+)
+
+ipcMain.handle(
+  'mapconfig:loadStartboxes',
+  async (_event, projectPath: string, worldWidth: number, worldHeight: number) => {
+    return loadStartboxes(projectPath, worldWidth, worldHeight)
+  }
+)
+
+ipcMain.handle(
+  'mapconfig:saveStartboxes',
+  async (_event, projectPath: string, config: StartboxConfig) => {
+    await saveStartboxes(projectPath, config)
+  }
+)
+
+ipcMain.handle('mapconfig:loadMetalLayout', async (_event, projectPath: string) => {
+  return loadMetalLayout(projectPath)
+})
+
+ipcMain.handle(
+  'mapconfig:saveMetalLayout',
+  async (_event, projectPath: string, layout: MetalLayout) => {
+    await saveMetalLayout(projectPath, layout)
+  }
+)
 
 app.whenReady().then(async () => {
   await mkdir(getDefaultProjectsDir(), { recursive: true })

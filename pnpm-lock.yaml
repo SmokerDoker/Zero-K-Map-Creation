@@ -16,6 +16,9 @@ importers:
       '@react-three/fiber':
         specifier: ^8.17.10
         version: 8.18.0(@types/react@18.3.31)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.169.0)
+      '@zk-map/map-lua':
+        specifier: workspace:*
+        version: link:../../packages/map-lua
       '@zk-map/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
@@ -57,7 +60,21 @@ importers:
         specifier: ^5.4.0
         version: 5.4.21(@types/node@26.1.1)
 
-  packages/map-lua: {}
+  packages/map-lua:
+    dependencies:
+      luaparse:
+        specifier: ^0.3.1
+        version: 0.3.1
+    devDependencies:
+      '@types/luaparse':
+        specifier: ^0.2.12
+        version: 0.2.13
+      typescript:
+        specifier: ^5.5.4
+        version: 5.9.3
+      vitest:
+        specifier: ^2.0.5
+        version: 2.1.9(@types/node@26.1.1)
 
   packages/shared-types: {}
 
@@ -626,6 +643,9 @@ packages:
 
   '@types/keyv@3.1.4':
     resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
+
+  '@types/luaparse@0.2.13':
+    resolution: {integrity: sha512-nWs2m9b/zrMcAA2Rs+wTxdIsBkSYMo0+6ko8mpeqS5dhchU3hQN9kZGcSw96n497Vc7kGpDLtSicjdpaUrRAkw==}
 
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
@@ -1450,6 +1470,10 @@ packages:
   lru-cache@6.0.0:
     resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
     engines: {node: '>=10'}
+
+  luaparse@0.3.1:
+    resolution: {integrity: sha512-b21h2bFEbtGXmVqguHogbyrMAA0wOHyp9u/rx+w6Yc9pW1t9YjhGUsp87lYcp7pFRqSWN/PhFkrdIqKEUzRjjQ==}
+    hasBin: true
 
   maath@0.10.8:
     resolution: {integrity: sha512-tRvbDF0Pgqz+9XUa4jjfgAQ8/aPKmQdWXilFu2tMy4GWj4NOsx99HlULO4IeREfbO3a0sA145DZYyvXPkybm0g==}
@@ -2647,6 +2671,8 @@ snapshots:
     dependencies:
       '@types/node': 20.19.43
 
+  '@types/luaparse@0.2.13': {}
+
   '@types/ms@2.1.0': {}
 
   '@types/node@20.19.43':
@@ -3635,6 +3661,8 @@ snapshots:
   lru-cache@6.0.0:
     dependencies:
       yallist: 4.0.0
+
+  luaparse@0.3.1: {}
 
   maath@0.10.8(@types/three@0.169.0)(three@0.169.0):
     dependencies:
