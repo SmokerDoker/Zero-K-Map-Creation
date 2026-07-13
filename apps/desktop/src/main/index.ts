@@ -10,9 +10,12 @@ import {
   saveStartboxes,
   loadMetalLayout,
   saveMetalLayout,
+  loadFeatures,
+  saveFeatures,
   type GameplaySettings
 } from './mapconfig'
 import type { MetalLayout, StartboxConfig } from '@zk-map/map-lua'
+import type { FeatureLayout } from '@zk-map/shared-types'
 
 /** Per-OS default location for user-created map projects (e.g. %APPDATA%\Zero-K Map Creator\Projects on Windows). */
 function getDefaultProjectsDir(): string {
@@ -117,6 +120,17 @@ ipcMain.handle(
   'mapconfig:saveMetalLayout',
   async (_event, projectPath: string, layout: MetalLayout) => {
     await saveMetalLayout(projectPath, layout)
+  }
+)
+
+ipcMain.handle('mapconfig:loadFeatures', async (_event, projectPath: string) => {
+  return loadFeatures(projectPath)
+})
+
+ipcMain.handle(
+  'mapconfig:saveFeatures',
+  async (_event, projectPath: string, layout: FeatureLayout) => {
+    await saveFeatures(projectPath, layout)
   }
 )
 

@@ -47,3 +47,27 @@ export interface TerrainData {
   height: number
   heights: Float32Array
 }
+
+/**
+ * Cosmetic grouping for the feature palette (icon/color only). Unlike SMF/mapinfo fields, there
+ * is no fixed, universally-valid set of feature *names* to offer here — real trees/rocks/geovents
+ * come from FeatureDefs the map itself imports (typically via Springboard), which vary per map.
+ * `typeName` is therefore always free text the mapper must match to their own imported assets.
+ */
+export type FeatureKind = 'tree' | 'rock' | 'geovent' | 'custom'
+
+export interface MapFeatureInstance {
+  id: string
+  typeName: string
+  kind: FeatureKind
+  x: number
+  z: number
+  /** Radians. */
+  rotation: number
+  /** Reserved by the SMF format; keep near 1 unless the imported FeatureDef supports scaling. */
+  scale: number
+}
+
+export interface FeatureLayout {
+  features: MapFeatureInstance[]
+}

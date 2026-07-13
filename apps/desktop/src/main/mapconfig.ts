@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import type { MapInfo, MetalLayout, Point2D, StartboxConfig } from '@zk-map/map-lua'
+import type { FeatureLayout } from '@zk-map/shared-types'
 
 /** The subset of mapinfo.lua fields edited directly (name/author/etc. come from project.json). */
 export type GameplaySettings = Omit<
@@ -12,6 +13,7 @@ export type GameplaySettings = Omit<
 const GAMEPLAY_FILE = join('source', 'gameplay-settings.json')
 const STARTBOXES_FILE = join('source', 'startboxes.json')
 const METAL_LAYOUT_FILE = join('source', 'metal-layout.json')
+const FEATURES_FILE = join('source', 'features.json')
 
 const DEFAULT_GAMEPLAY_SETTINGS: GameplaySettings = {
   gravity: 130,
@@ -99,4 +101,12 @@ export async function loadMetalLayout(projectPath: string): Promise<MetalLayout>
 
 export async function saveMetalLayout(projectPath: string, layout: MetalLayout): Promise<void> {
   await writeJsonFile(projectPath, METAL_LAYOUT_FILE, layout)
+}
+
+export async function loadFeatures(projectPath: string): Promise<FeatureLayout> {
+  return readJsonFile(projectPath, FEATURES_FILE, { features: [] })
+}
+
+export async function saveFeatures(projectPath: string, layout: FeatureLayout): Promise<void> {
+  await writeJsonFile(projectPath, FEATURES_FILE, layout)
 }
