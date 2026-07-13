@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 import type { FeatureLayout, MapProjectSummary } from '@zk-map/shared-types'
 import type { MetalLayout, StartboxConfig } from '@zk-map/map-lua'
 import type { GameplaySettings } from '../main/mapconfig'
+import type { CompileResult } from '../main/compile'
 
 export interface NewProjectInput {
   parentDir: string
@@ -41,7 +42,11 @@ const api = {
   loadFeatures: (projectPath: string): Promise<FeatureLayout> =>
     ipcRenderer.invoke('mapconfig:loadFeatures', projectPath),
   saveFeatures: (projectPath: string, layout: FeatureLayout): Promise<void> =>
-    ipcRenderer.invoke('mapconfig:saveFeatures', projectPath, layout)
+    ipcRenderer.invoke('mapconfig:saveFeatures', projectPath, layout),
+  compileProject: (projectPath: string): Promise<CompileResult> =>
+    ipcRenderer.invoke('map:compile', projectPath),
+  showInFolder: (targetPath: string): Promise<void> =>
+    ipcRenderer.invoke('shell:showInFolder', targetPath)
 }
 
 contextBridge.exposeInMainWorld('api', api)

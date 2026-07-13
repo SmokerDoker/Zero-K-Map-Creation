@@ -6,8 +6,9 @@ import { MapInfoForm } from './MapInfoForm'
 import { StartboxEditor } from './StartboxEditor'
 import { MetalSpotEditor } from './MetalSpotEditor'
 import { FeatureEditor } from './FeatureEditor'
+import { CompileView } from './CompileView'
 
-type View = 'project' | 'terrain' | 'mapinfo' | 'startboxes' | 'metal' | 'features'
+type View = 'project' | 'terrain' | 'mapinfo' | 'startboxes' | 'metal' | 'features' | 'compile'
 
 function App(): JSX.Element {
   const [project, setProject] = useState<MapProjectSummary | null>(null)
@@ -45,6 +46,10 @@ function App(): JSX.Element {
     return <FeatureEditor project={project} onBack={() => setView('project')} />
   }
 
+  if (project && view === 'compile') {
+    return <CompileView project={project} onBack={() => setView('project')} />
+  }
+
   if (project) {
     return (
       <div className="app">
@@ -63,6 +68,7 @@ function App(): JSX.Element {
             <button onClick={() => setView('startboxes')}>Startboxen</button>
             <button onClick={() => setView('metal')}>Metal-Spots</button>
             <button onClick={() => setView('features')}>Features</button>
+            <button onClick={() => setView('compile')}>Kompilieren</button>
           </div>
           <button
             onClick={() => {

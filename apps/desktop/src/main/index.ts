@@ -16,6 +16,7 @@ import {
 } from './mapconfig'
 import type { MetalLayout, StartboxConfig } from '@zk-map/map-lua'
 import type { FeatureLayout } from '@zk-map/shared-types'
+import { compileProject } from './compile'
 
 /** Per-OS default location for user-created map projects (e.g. %APPDATA%\Zero-K Map Creator\Projects on Windows). */
 function getDefaultProjectsDir(): string {
@@ -133,6 +134,14 @@ ipcMain.handle(
     await saveFeatures(projectPath, layout)
   }
 )
+
+ipcMain.handle('map:compile', async (_event, projectPath: string) => {
+  return compileProject(projectPath)
+})
+
+ipcMain.handle('shell:showInFolder', (_event, targetPath: string) => {
+  shell.showItemInFolder(targetPath)
+})
 
 app.whenReady().then(async () => {
   await mkdir(getDefaultProjectsDir(), { recursive: true })

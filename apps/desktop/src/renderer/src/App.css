@@ -366,3 +366,19 @@ button[type='button']:not(.dashboard button) {
   opacity: 0.55;
   stroke-dasharray: 2 2;
 }
+
+.compile-result {
+  background: #1c2027;
+  border: 1px solid #2d333d;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+ul.warning {
+  margin: 0;
+  padding-left: 18px;
+}

@@ -14,9 +14,12 @@
   "dependencies": {
     "@zk-map/shared-types": "workspace:*",
     "@zk-map/map-lua": "workspace:*",
+    "@zk-map/smf-format": "workspace:*",
     "@react-three/drei": "^9.114.0",
     "@react-three/fiber": "^8.17.10",
-    "three": "^0.169.0"
+    "three": "^0.169.0",
+    "node-7z": "^3.0.0",
+    "7zip-bin": "^5.2.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.1",
@@ -29,6 +32,7 @@
     "react-dom": "^18.3.1",
     "typescript": "^5.5.4",
     "vite": "^5.4.0",
-    "@types/three": "^0.169.0"
+    "@types/three": "^0.169.0",
+    "@types/node-7z": "^2.1.10"
   }
 }
