@@ -38,6 +38,7 @@ export function MetalSpotsOverlay({
             key={i}
             position={[sx, sy, sz]}
             onPointerDown={(e) => {
+              if (e.button !== 0) return
               e.stopPropagation()
               onMarkerDown(i)
             }}

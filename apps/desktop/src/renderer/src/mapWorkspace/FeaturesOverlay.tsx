@@ -63,6 +63,7 @@ export function FeaturesOverlay({
             rotation={[0, f.rotation, 0]}
             scale={f.scale}
             onPointerDown={(e) => {
+              if (e.button !== 0) return
               e.stopPropagation()
               onMarkerDown(f.id)
             }}

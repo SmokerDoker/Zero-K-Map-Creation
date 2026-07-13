@@ -84,12 +84,17 @@ function TerrainMesh({
       receiveShadow
       castShadow
       onPointerDown={(e) => {
+        // Left button only — right/middle are reserved for OrbitControls (rotate/pan).
+        if (e.button !== 0) return
         onTerrainDown?.(toHit(e))
       }}
       onPointerMove={(e) => {
         onTerrainMove?.(toHit(e))
       }}
-      onPointerUp={() => onTerrainUp?.()}
+      onPointerUp={(e) => {
+        if (e.button !== 0) return
+        onTerrainUp?.()
+      }}
     >
       <meshStandardMaterial color="#6f9457" side={THREE.DoubleSide} />
     </mesh>
@@ -122,7 +127,14 @@ function CameraRig({ preset }: { preset: CameraPreset }): JSX.Element {
         near={0.1}
         far={100}
       />
-      <OrbitControls makeDefault enableRotate={preset === 'orbit'} target={[0, 0, 0]} />
+      <OrbitControls
+        makeDefault
+        enableRotate={preset === 'orbit'}
+        target={[0, 0, 0]}
+        // Left is reserved for editing (painting/placing/dragging) — only right/middle drive the
+        // camera, so left-click never fights with our own terrain/marker pointer handlers.
+        mouseButtons={{ MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.ROTATE }}
+      />
     </>
   )
 }

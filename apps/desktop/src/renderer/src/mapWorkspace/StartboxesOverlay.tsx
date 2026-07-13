@@ -53,6 +53,7 @@ export function StartboxesOverlay({
                   key={pi}
                   position={[sx, FLOAT_HEIGHT, sz]}
                   onPointerDown={(e) => {
+                    if (e.button !== 0) return
                     e.stopPropagation()
                     onHandleDown({ team: ti, kind: 'corner', index: pi })
                   }}
@@ -70,6 +71,7 @@ export function StartboxesOverlay({
                   key={si}
                   position={[sx, FLOAT_HEIGHT, sz]}
                   onPointerDown={(e) => {
+                    if (e.button !== 0) return
                     e.stopPropagation()
                     onHandleDown({ team: ti, kind: 'start', index: si })
                   }}
