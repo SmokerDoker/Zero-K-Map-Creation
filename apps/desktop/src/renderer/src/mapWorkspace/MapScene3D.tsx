@@ -20,6 +20,9 @@ export type CameraPreset = 'orbit' | 'topdown'
 export interface TerrainHit {
   worldX: number
   worldZ: number
+  /** Whether Alt was held for this event — used by the flatten brush to pin a reference height
+   * (e.g. sampled from dry land) instead of resampling under the cursor on every stroke. */
+  altKey: boolean
 }
 
 export interface MapScene3DProps {
@@ -92,7 +95,7 @@ function TerrainMesh({
 
   function toHit(event: ThreeEvent<PointerEvent>): TerrainHit {
     const [worldX, worldZ] = sceneToWorld(event.point.x, event.point.z, scale)
-    return { worldX, worldZ }
+    return { worldX, worldZ, altKey: event.altKey }
   }
 
   return (

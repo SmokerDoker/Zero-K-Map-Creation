@@ -89,6 +89,7 @@ export function MapWorkspace({ project, onBack }: MapWorkspaceProps): JSX.Elemen
 
   const isPaintingRef = useRef(false)
   const flattenTargetRef = useRef(0.5)
+  const [flattenPinned, setFlattenPinned] = useState(false)
   const draggingMetalIndexRef = useRef<number | null>(null)
   const draggingFeatureIdRef = useRef<string | null>(null)
   const draggingStartboxRef = useRef<StartboxHandleTarget | null>(null)
@@ -147,6 +148,15 @@ export function MapWorkspace({ project, onBack }: MapWorkspaceProps): JSX.Elemen
     })
   }
 
+  function sampleHeight(hit: TerrainHit): number {
+    const [gx, gy] = worldToGrid(hit.worldX, hit.worldZ)
+    const idx = Math.max(
+      0,
+      Math.min(heightsRef.current.length - 1, Math.round(gy) * heightmapWidth + Math.round(gx))
+    )
+    return heightsRef.current[idx]
+  }
+
   function paintAt(hit: TerrainHit): void {
     const [gx, gy] = worldToGrid(hit.worldX, hit.worldZ)
     applyTerrainBrush(
@@ -165,15 +175,20 @@ export function MapWorkspace({ project, onBack }: MapWorkspaceProps): JSX.Elemen
 
   function handleTerrainDown(hit: TerrainHit): void {
     if (mode === 'terrain') {
-      isPaintingRef.current = true
       if (brushMode === 'flatten') {
-        const [gx, gy] = worldToGrid(hit.worldX, hit.worldZ)
-        const idx = Math.max(
-          0,
-          Math.min(heightsRef.current.length - 1, Math.round(gy) * heightmapWidth + Math.round(gx))
-        )
-        flattenTargetRef.current = heightsRef.current[idx]
+        // Alt+Click only pins the reference height (e.g. sampled from dry land next to a lake) —
+        // it doesn't paint. Without a pin, each stroke resamples under the cursor, which makes
+        // filling a lake impossible if you start the drag inside the water itself.
+        if (hit.altKey) {
+          flattenTargetRef.current = sampleHeight(hit)
+          setFlattenPinned(true)
+          return
+        }
+        if (!flattenPinned) {
+          flattenTargetRef.current = sampleHeight(hit)
+        }
       }
+      isPaintingRef.current = true
       paintAt(hit)
     } else if (mode === 'metal' && metalLayout) {
       const newIndex = metalLayout.spots.length
@@ -433,6 +448,18 @@ export function MapWorkspace({ project, onBack }: MapWorkspaceProps): JSX.Elemen
                     </button>
                   ))}
                 </div>
+                {brushMode === 'flatten' && (
+                  <p className="hint">
+                    {flattenPinned
+                      ? 'Zielhöhe fixiert — malt überall auf diese Höhe (z. B. See auffüllen).'
+                      : 'Alt+Klick auf Land = Zielhöhe fixieren, danach im See malen um ihn aufzufüllen.'}
+                    {flattenPinned && (
+                      <button className="link-button" onClick={() => setFlattenPinned(false)}>
+                        Lösen
+                      </button>
+                    )}
+                  </p>
+                )}
                 <label className="slider">
                   Radius
                   <input

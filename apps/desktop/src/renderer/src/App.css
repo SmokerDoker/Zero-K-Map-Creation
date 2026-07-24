@@ -314,6 +314,17 @@ button[type='button']:not(.dashboard button) {
   color: #f0b429;
 }
 
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 6px;
+  color: #4f8ff0;
+  font-size: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 .compile-result {
   background: #1c2027;
   border: 1px solid #2d333d;
