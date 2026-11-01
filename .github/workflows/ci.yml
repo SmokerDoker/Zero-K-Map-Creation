@@ -2,12 +2,17 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: ['**']
   pull_request:
-    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
+    name: Typecheck & tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,7 +26,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Typecheck
+      - name: Typecheck app
         run: pnpm --filter @zk-map/desktop typecheck
 
       - name: Typecheck packages
@@ -29,3 +34,8 @@ jobs:
 
       - name: Unit tests
         run: pnpm -r test
+
+  installers:
+    name: Installers
+    needs: test
+    uses: ./.github/workflows/build-installers.yml
