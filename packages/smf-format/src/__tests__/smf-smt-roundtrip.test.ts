@@ -88,7 +88,7 @@ describe('SMF codec', () => {
 
   it('rejects a buffer with the wrong magic', () => {
     const bogus = new Uint8Array(80)
-    expect(() => decodeSmf(bogus)).toThrow(/Magic/)
+    expect(() => decodeSmf(bogus)).toThrow(/magic/)
   })
 })
 
@@ -126,7 +126,7 @@ describe('SMT codec', () => {
       compressionType: 1,
       tiles: [new Uint8Array(10)]
     }
-    expect(() => encodeSmt(tileFile)).toThrow(/680 Bytes/)
+    expect(() => encodeSmt(tileFile)).toThrow(/680 bytes/)
   })
 })
 

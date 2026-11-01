@@ -26,7 +26,10 @@ export interface BuildSmfInput {
   heightmapHeight: number
   features: FeatureLayout
   tileFileName: string
+  onProgress?: (stage: BuildSmfStage, fraction: number) => void
 }
+
+export type BuildSmfStage = 'texture' | 'tiles' | 'minimap'
 
 export interface BuildSmfOutput {
   smf: SmfMap
@@ -63,7 +66,10 @@ function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
 
 /** Slices the full diffuse texture into 32x32 tiles, de-duplicating identical ones (common on
  * smooth procedural terrain) before the relatively expensive DXT1 compression step. */
-function buildTileset(diffuse: RgbaImage): { tiles: Uint8Array[]; tileIndices: Int32Array } {
+function buildTileset(
+  diffuse: RgbaImage,
+  onProgress?: (fraction: number) => void
+): { tiles: Uint8Array[]; tileIndices: Int32Array } {
   const tilesAcrossX = diffuse.width / TILE_SIZE
   const tilesAcrossY = diffuse.height / TILE_SIZE
   const tileIndices = new Int32Array(tilesAcrossX * tilesAcrossY)
@@ -73,6 +79,7 @@ function buildTileset(diffuse: RgbaImage): { tiles: Uint8Array[]; tileIndices: I
   const compressedTiles: Uint8Array[] = []
 
   for (let ty = 0; ty < tilesAcrossY; ty++) {
+    onProgress?.(ty / tilesAcrossY)
     for (let tx = 0; tx < tilesAcrossX; tx++) {
       const tileImage = sliceTile(diffuse, tx, ty)
       const hash = hashBytes(tileImage.data)
@@ -121,12 +128,24 @@ export function buildSmf(input: BuildSmfInput): BuildSmfOutput {
   const textureWidth = mapWidth * TEXELS_PER_SQUARE
   const textureHeight = mapHeight * TEXELS_PER_SQUARE
 
-  const diffuse = generateDiffuseTexture(heights, heightmapWidth, heightmapHeight, textureWidth, textureHeight)
-  const { tiles, tileIndices } = buildTileset(diffuse)
+  const report = input.onProgress
+  const diffuse = generateDiffuseTexture(
+    heights,
+    heightmapWidth,
+    heightmapHeight,
+    textureWidth,
+    textureHeight,
+    report && ((f) => report('texture', f))
+  )
+  report?.('texture', 1)
+  const { tiles, tileIndices } = buildTileset(diffuse, report && ((f) => report('tiles', f)))
+  report?.('tiles', 1)
   const smt: SmtTileFile = { version: 1, tileSize: TILE_SIZE, compressionType: 1, tiles }
 
+  report?.('minimap', 0)
   const minimapSource = downsampleTo(diffuse, MINIMAP_SIZE_PX, MINIMAP_SIZE_PX)
   const minimap = compressMipChainDXT1(minimapSource, MINIMAP_MIP_LEVELS)
+  report?.('minimap', 1)
 
   const heightMapUint16 = new Uint16Array(heights.length)
   for (let i = 0; i < heights.length; i++) {

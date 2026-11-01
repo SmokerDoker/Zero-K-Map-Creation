@@ -20,7 +20,7 @@ function evalLuaLiteral(node: luaparse.Expression): unknown {
     case 'UnaryExpression': {
       const unary = node as luaparse.UnaryExpression
       if (unary.operator === '-') return -(evalLuaLiteral(unary.argument) as number)
-      throw new Error(`Nicht unterstützter unärer Operator in Lua-Literal: ${unary.operator}`)
+      throw new Error(`Unsupported unary operator in Lua literal: ${unary.operator}`)
     }
     case 'TableConstructorExpression': {
       const table = node as luaparse.TableConstructorExpression
@@ -44,7 +44,7 @@ function evalLuaLiteral(node: luaparse.Expression): unknown {
     }
     default:
       throw new Error(
-        `Nicht unterstützter Lua-Ausdruck beim Einlesen der Map-Konfiguration: ${node.type}`
+        `Unsupported Lua expression while reading the map config: ${node.type}`
       )
   }
 }
@@ -85,7 +85,7 @@ function parseReturnedLiterals(source: string): unknown[] {
     | luaparse.ReturnStatement
     | undefined
   if (!returnStatement) {
-    throw new Error('Lua-Datei enthält kein return-Statement')
+    throw new Error('Lua file has no return statement')
   }
   return returnStatement.arguments.map((arg) => evalLuaLiteral(resolveExpression(arg, locals)))
 }

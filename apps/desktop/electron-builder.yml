@@ -1,10 +1,15 @@
 appId: org.zerokmapcreator.app
 productName: Zero-K Map Creator
+# The workspace package is called "@zk-map/desktop"; give the shipped app a clean name instead
+# (used for the Linux executable and the .deb package name).
+extraMetadata:
+  name: zero-k-map-creator
 directories:
   output: release
   buildResources: build
 
-# electron-vite's build output — everything the packaged app needs to run.
+# electron-vite's build output — everything the packaged app needs to run. All JS dependencies are
+# bundled into out/ by electron-vite; the only runtime node_module is 7zip-bin (see package.json).
 files:
   - out/**/*
   - package.json
@@ -14,17 +19,20 @@ asarUnpack:
   # be executed straight out of an asar archive.
   - '**/node_modules/7zip-bin/**/*'
 
+afterPack: scripts/after-pack.cjs
+
 win:
   target:
     - target: nsis
       arch:
         - x64
-  artifactName: '${productName}-${version}-setup.${ext}'
+  artifactName: 'Zero-K-Map-Creator-${version}-windows-setup.${ext}'
 
 nsis:
-  oneClick: true
+  oneClick: false
   perMachine: false
-  allowToChangeInstallationDirectory: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
 
 mac:
   target:
@@ -33,10 +41,12 @@ mac:
         - x64
         - arm64
   category: public.app-category.developer-tools
-  artifactName: '${productName}-${version}-${arch}.${ext}'
+  # No Apple Developer ID yet: skip Developer-ID signing; scripts/after-pack.cjs signs ad-hoc instead.
+  identity: null
+  artifactName: 'Zero-K-Map-Creator-${version}-macos-${arch}.${ext}'
 
 dmg:
-  artifactName: '${productName}-${version}-${arch}.${ext}'
+  artifactName: 'Zero-K-Map-Creator-${version}-macos-${arch}.${ext}'
 
 linux:
   target:
@@ -47,8 +57,9 @@ linux:
       arch:
         - x64
   category: Development
-  artifactName: '${productName}-${version}-${arch}.${ext}'
+  executableName: zero-k-map-creator
+  maintainer: SmokerDoker
+  artifactName: 'Zero-K-Map-Creator-${version}-linux-${arch}.${ext}'
 
-# No auto-publish target configured yet — CI just uploads build artifacts to the GitHub Release,
-# it doesn't use electron-builder's own publish/auto-update mechanism.
+# No auto-update/publish via electron-builder — GitHub Actions uploads the installers itself.
 publish: null

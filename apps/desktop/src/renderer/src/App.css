@@ -149,7 +149,7 @@ button[type='button']:not(.dashboard button) {
 .terrain-toolbar {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px 10px;
   padding: 10px 16px;
   background: #1c2027;
   border-bottom: 1px solid #2d333d;
@@ -273,6 +273,10 @@ button[type='button']:not(.dashboard button) {
 }
 
 .terrain-pane + .metal-side-panel {
+  /* Fixed width: a panel that changes size per tab would resize the 3D view under the cursor. */
+  width: 320px;
+  flex: 0 0 320px;
+  box-sizing: border-box;
   padding: 20px 16px;
   overflow-y: auto;
   border-left: 1px solid #2d333d;
@@ -370,4 +374,206 @@ ul.warning {
   color: #9aa3b0;
   font-size: 0.8rem;
   white-space: nowrap;
+}
+
+/* --- Toolbar additions ------------------------------------------------------------------- */
+
+.terrain-toolbar button {
+  padding: 7px 11px;
+  font-size: 0.88rem;
+}
+
+.terrain-toolbar .brush-modes {
+  gap: 4px;
+}
+
+.toolbar-group {
+  display: flex;
+  gap: 6px;
+}
+
+.toolbar-group button,
+button.secondary,
+button[type='button'].secondary {
+  background: #333a45;
+}
+
+.toolbar-group button:hover:not(:disabled),
+button.secondary:hover:not(:disabled) {
+  background: #424a57;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+button.danger {
+  background: #9b2c2c;
+}
+
+button.danger:hover {
+  background: #822727;
+}
+
+.toolbar-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #c6cbd3;
+  cursor: pointer;
+}
+
+.toolbar-toggle.disabled {
+  color: #6b7280;
+  cursor: default;
+}
+
+.toolbar-save {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.terrain-toolbar button.icon-button {
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 6px 12px;
+}
+
+.save-status {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.save-status.dirty {
+  color: #f0b429;
+}
+
+.workspace-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: #1f3a2a;
+  color: #c6f6d5;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #2d333d;
+}
+
+.workspace-banner.error {
+  background: #3b1f22;
+  color: #feb2b2;
+}
+
+.metal-side-panel h3 {
+  margin: 8px 0 0;
+  font-size: 0.95rem;
+  color: #e6e8eb;
+}
+
+.panel-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #2d333d;
+}
+
+.checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid #2d333d;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  color: #c6cbd3;
+}
+
+.checkbox-list legend {
+  font-size: 0.85rem;
+  color: #9aa3b0;
+  padding: 0 4px;
+}
+
+.checkbox-list label,
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #c6cbd3;
+}
+
+/* --- Header / language --------------------------------------------------------------------- */
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.language-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #9aa3b0;
+}
+
+.language-select select {
+  background: #14171c;
+  border: 1px solid #333a45;
+  border-radius: 6px;
+  color: #e6e8eb;
+  padding: 6px 8px;
+  font-family: inherit;
+}
+
+/* --- Compile progress ---------------------------------------------------------------------- */
+
+.compile-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 520px;
+}
+
+.compile-progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: #c6cbd3;
+}
+
+.progress-track {
+  height: 10px;
+  background: #262b33;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #2b6cb0;
+  transition: width 0.15s ease-out;
+}
+
+.compile-progress button {
+  align-self: flex-start;
+}
+
+button.primary,
+button[type='button'].primary {
+  background: #2b6cb0;
+}
+
+button.primary:hover,
+button[type='button'].primary:hover {
+  background: #2c5282;
 }

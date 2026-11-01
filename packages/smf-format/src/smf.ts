@@ -116,7 +116,7 @@ export function decodeSmf(data: Uint8Array): SmfMap {
 
   const magic = r.fixedString(16)
   if (magic !== SMF_MAGIC) {
-    throw new Error(`Ungültige SMF-Datei: falsche Magic-Signatur (${JSON.stringify(magic)})`)
+    throw new Error(`Invalid SMF file: wrong magic signature (${JSON.stringify(magic)})`)
   }
 
   const header: SmfHeader = {
