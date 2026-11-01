@@ -67,7 +67,7 @@ Projects are plain folders (`<name>.zkmap/`) with JSON data in `source/`. Build 
 
 ## Development
 
-Requires Node.js ≥ 20 and pnpm (the version is pinned in `package.json`).
+Requires Node.js ≥ 22 and pnpm (the version is pinned in `package.json`).
 
 ```sh
 pnpm install
