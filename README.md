@@ -45,6 +45,8 @@ Get the installer for your platform from the [Releases page](https://github.com/
 | macOS (Intel) | `Zero-K-Map-Creator-<version>-macos-x64.dmg` |
 | Linux | `Zero-K-Map-Creator-<version>-linux-x86_64.AppImage` or `-linux-amd64.deb` |
 
+> **macOS is untested.** The maintainer doesn't own a Mac, so the macOS builds are produced by CI but have never been run by a human. If you use a Mac, please try them and [open an issue](https://github.com/smokerdoker/zero-k-map-creation/issues) with what works and what doesn't. Feedback is very welcome.
+
 The installers are **not code-signed** yet:
 
 - **Windows:** SmartScreen may warn about an unknown publisher. Click *More info*, then *Run anyway*.
