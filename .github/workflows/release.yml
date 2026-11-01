@@ -1,11 +1,20 @@
 name: Release
 
-# Push a tag like "v0.2.0" to build all installers and publish them as a GitHub Release.
-# Tags with a suffix (e.g. "v0.2.0-beta.1") are published as pre-releases.
+# Publish a GitHub Release with all installers, either by
+#  - pushing a tag like "v0.2.0", or
+#  - running this workflow manually (Actions → Release → Run workflow) with a version like
+#    "0.2.0"; the tag "v0.2.0" is then created on the selected commit.
+# Versions with a suffix (e.g. "0.2.0-beta.1") are published as pre-releases.
 on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release, without the leading "v" (e.g. 0.2.0)'
+        required: true
+        type: string
 
 jobs:
   version:
@@ -15,7 +24,14 @@ jobs:
     steps:
       - id: v
         shell: bash
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [ -n "$INPUT_VERSION" ]; then v="${INPUT_VERSION#v}"; else v="${GITHUB_REF_NAME#v}"; fi
+          if ! [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::'$v' is not a valid version (expected e.g. 0.2.0 or 0.2.0-beta.1)"; exit 1
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
 
   installers:
     needs: version
@@ -25,7 +41,7 @@ jobs:
       retention-days: 3
 
   release:
-    needs: installers
+    needs: [version, installers]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -39,8 +55,11 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ needs.version.outputs.version }}
+          name: Zero-K Map Creator ${{ needs.version.outputs.version }}
+          target_commitish: ${{ github.sha }}
           files: artifacts/*
-          prerelease: ${{ contains(github.ref_name, '-') }}
+          prerelease: ${{ contains(needs.version.outputs.version, '-') }}
           generate_release_notes: true
           body: |
             ## Downloads

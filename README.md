@@ -95,12 +95,14 @@ Copy `apps/desktop/src/shared/i18n/de.ts`, translate the strings and register th
 
 ### Releasing
 
-Push a version tag. GitHub Actions then builds all installers and publishes a GitHub Release:
+Either run the **Release** workflow manually (*Actions → Release → Run workflow*, enter a version such as `0.2.0`), or push a version tag:
 
 ```sh
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.2.0
+git push origin v0.2.0
 ```
+
+Both build all installers and publish them as a GitHub Release. Versions with a suffix (e.g. `0.2.0-beta.1`) become pre-releases.
 
 ## License
 
