@@ -52,6 +52,8 @@ jobs:
             | macOS (Intel) | `Zero-K-Map-Creator-*-macos-x64.dmg` |
             | Linux | `Zero-K-Map-Creator-*-linux-x86_64.AppImage` or `.deb` |
 
+            > **macOS builds are untested** — the maintainer has no Mac. Feedback via GitHub issues is very welcome.
+
             The installers are not code-signed yet:
             - **Windows:** SmartScreen may warn about an unknown publisher → *More info* → *Run anyway*.
             - **macOS:** after copying the app to *Applications*, run once in Terminal:
