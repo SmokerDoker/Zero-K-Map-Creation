@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import type { MapProjectSummary } from '@zk-map/shared-types'
+import { useI18n } from './i18n'
+import { formatError } from './errors'
+import { CompileProgressBar, useCompileProgress } from './CompileProgressBar'
 
 export interface PublishViewProps {
   project: MapProjectSummary
@@ -16,8 +19,12 @@ interface CompileState {
 }
 
 export function PublishView({ project, onBack }: PublishViewProps): JSX.Element {
+  const { t } = useI18n()
   const [state, setState] = useState<CompileState>({ status: 'idle' })
   const [copied, setCopied] = useState(false)
+  const progress = useCompileProgress(state.status === 'compiling')
+  // Kept in English on purpose: it is pasted into the (English) springfiles upload form.
+  const metadataText = `Name: ${project.name}\nAuthor: ${project.author}\nVersion: ${project.version}\nDescription: ${project.description}`
 
   async function handleCompile(): Promise<void> {
     setState({ status: 'compiling' })
@@ -25,13 +32,12 @@ export function PublishView({ project, onBack }: PublishViewProps): JSX.Element 
       const result = await window.api.compileProject(project.projectPath)
       setState({ status: 'done', sd7Path: result.sd7Path })
     } catch (err) {
-      setState({ status: 'error', error: err instanceof Error ? err.message : String(err) })
+      setState({ status: 'error', error: formatError(err) })
     }
   }
 
   async function handleCopyMetadata(): Promise<void> {
-    const text = `Name: ${project.name}\nAutor: ${project.author}\nVersion: ${project.version}\nBeschreibung: ${project.description}`
-    await navigator.clipboard.writeText(text)
+    await navigator.clipboard.writeText(metadataText)
     setCopied(true)
     setTimeout(() => setCopied(false), 1500)
   }
@@ -39,64 +45,66 @@ export function PublishView({ project, onBack }: PublishViewProps): JSX.Element 
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Veröffentlichen</h1>
-        <p className="subtitle">{project.name} · Upload auf springfiles/zero-k.info</p>
+        <h1>{t('publish.title')}</h1>
+        <p className="subtitle">{t('publish.subtitle', { name: project.name, version: project.version })}</p>
       </header>
       <main className="mapinfo-form">
         <p className="hint">
-          Es gibt keine öffentliche Upload-API für springfiles.springrts.com oder zero-k.info —
-          der Community-Prozess ist manuell: Datei bei springfiles hochladen, dort wird sie
-          "unitsynced" (indexiert) und danach über die Spring-Infrastruktur bzw. zero-k.info/Maps
-          auffindbar. Diese Ansicht bereitet die Datei vor und öffnet die nötigen Seiten.
+          {t('publish.intro')}
+        </p>
+        <p className="hint">
+          {t('publish.versionHint', { version: project.version })}
         </p>
 
         {state.status === 'error' && <p className="error">{state.error}</p>}
 
+        {state.status === 'compiling' && <CompileProgressBar progress={progress} />}
+
         {state.status !== 'done' && (
           <button onClick={handleCompile} disabled={state.status === 'compiling'}>
-            {state.status === 'compiling' ? 'Kompiliert…' : '1. Karte kompilieren'}
+            {state.status === 'compiling' ? t('compile.running') : t('publish.step.compile')}
           </button>
         )}
 
         {state.status === 'done' && (
           <div className="compile-result">
-            <p>✓ Bereit zum Veröffentlichen:</p>
+            <p>{t('publish.ready')}</p>
             <p className="project-path">{state.sd7Path}</p>
 
             <div className="project-actions">
               <button onClick={() => window.api.showInFolder(state.sd7Path as string)}>
-                2. Ordner mit der Datei öffnen
+                {t('publish.step.openFolder')}
               </button>
               <button onClick={() => window.api.openExternal(SPRINGFILES_UPLOAD_URL)}>
-                3. Springfiles-Upload öffnen
+                {t('publish.step.springfiles')}
               </button>
               <button onClick={() => window.api.openExternal(ZK_MAPS_URL)}>
-                4. Zero-K Maps-Seite öffnen
+                {t('publish.step.zkMaps')}
               </button>
             </div>
 
             <label className="form-field">
-              Metadaten für das Upload-Formular
+              {t('publish.metadata')}
               <textarea
                 readOnly
                 rows={4}
-                value={`Name: ${project.name}\nAutor: ${project.author}\nVersion: ${project.version}\nBeschreibung: ${project.description}`}
+                value={metadataText}
               />
             </label>
             <button onClick={handleCopyMetadata}>
-              {copied ? 'Kopiert ✓' : 'Metadaten in Zwischenablage kopieren'}
+              {copied ? t('publish.copied') : t('publish.copy')}
             </button>
 
             <p className="hint">
-              Nach dem Upload kann die Indexierung eine Weile dauern, bevor die Karte über
-              zero-k.info/Maps auffindbar ist. Für "Featured"-Status ist zusätzlich eine
-              Community-/Admin-Freigabe üblich.
+              {t('publish.afterUpload')}
             </p>
           </div>
         )}
 
         <div className="dialog-actions">
-          <button onClick={onBack}>← Zurück</button>
+          <button className="secondary" onClick={onBack}>
+            {t('common.back')}
+          </button>
         </div>
       </main>
     </div>
