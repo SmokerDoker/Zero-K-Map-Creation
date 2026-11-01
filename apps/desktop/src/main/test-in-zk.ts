@@ -1,5 +1,5 @@
 import { copyMapToZeroK, launchZeroK, type ZkInstallation } from '@zk-map/zk-locator'
-import { compileProject } from './compile'
+import { compileProject, type CompileProgress } from './compile'
 
 export interface TestInZeroKResult {
   compiledSddPath: string
@@ -13,9 +13,10 @@ export interface TestInZeroKResult {
  * (see zk-locator's launchZeroK doc comment for why there's no verified direct-map-launch path). */
 export async function testInZeroK(
   projectPath: string,
-  installation: ZkInstallation
+  installation: ZkInstallation,
+  onProgress?: (progress: CompileProgress) => void
 ): Promise<TestInZeroKResult> {
-  const compileResult = await compileProject(projectPath)
+  const compileResult = await compileProject(projectPath, onProgress)
   const copiedToPath = await copyMapToZeroK(compileResult.sddPath, installation)
 
   const warnings = [...compileResult.warnings]

@@ -1,0 +1,79 @@
+name: Build installers
+
+# Reusable workflow: builds the Windows, macOS and Linux installers and uploads them as workflow
+# artifacts. Called by ci.yml (every push / pull request) and release.yml (version tags).
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'App version to stamp into the build (e.g. 0.2.0). Empty = keep package.json version.'
+        type: string
+        required: false
+        default: ''
+      retention-days:
+        type: number
+        required: false
+        default: 14
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+            dist-script: dist:win
+            artifact-glob: apps/desktop/release/*.exe
+          - name: macOS
+            os: macos-latest
+            dist-script: dist:mac
+            artifact-glob: apps/desktop/release/*.dmg
+          - name: Linux
+            os: ubuntu-latest
+            dist-script: dist:linux
+            artifact-glob: |
+              apps/desktop/release/*.AppImage
+              apps/desktop/release/*.deb
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Set app version
+        if: inputs.version != ''
+        shell: bash
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          node -e '
+            const fs = require("fs");
+            const file = "apps/desktop/package.json";
+            const pkg = JSON.parse(fs.readFileSync(file, "utf8"));
+            pkg.version = process.env.VERSION;
+            fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + "\n");
+          '
+
+      - name: Build installer
+        run: pnpm --filter @zk-map/desktop ${{ matrix.dist-script }}
+        env:
+          # No code-signing certificates are configured (see README for what that means for users).
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Zero-K-Map-Creator-${{ matrix.name }}
+          path: ${{ matrix.artifact-glob }}
+          if-no-files-found: error
+          retention-days: ${{ inputs.retention-days }}

@@ -5,10 +5,14 @@ import { MapWorkspace } from './MapWorkspace'
 import { CompileView } from './CompileView'
 import { TestInZkView } from './TestInZkView'
 import { PublishView } from './PublishView'
+import { LanguageSelect } from './LanguageSelect'
+import { useI18n } from './i18n'
+import { formatError } from './errors'
 
 type View = 'project' | 'workspace' | 'compile' | 'test' | 'publish'
 
 function App(): JSX.Element {
+  const { t } = useI18n()
   const [project, setProject] = useState<MapProjectSummary | null>(null)
   const [view, setView] = useState<View>('project')
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false)
@@ -20,12 +24,14 @@ function App(): JSX.Element {
       const opened = await window.api.pickAndOpenProject()
       if (opened) setProject(opened)
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(formatError(err))
     }
   }
 
   if (project && view === 'workspace') {
-    return <MapWorkspace project={project} onBack={() => setView('project')} />
+    return (
+      <MapWorkspace project={project} onBack={() => setView('project')} onProjectUpdated={setProject} />
+    )
   }
 
   if (project && view === 'compile') {
@@ -44,27 +50,35 @@ function App(): JSX.Element {
     return (
       <div className="app">
         <header className="app-header">
-          <h1>{project.name}</h1>
+          <div className="header-row">
+            <h1>{project.name}</h1>
+            <LanguageSelect />
+          </div>
           <p className="subtitle">
-            von {project.author || 'Unbekannt'} · {project.size.width}×{project.size.height}
+            {t('project.byline', {
+              author: project.author || t('project.unknownAuthor'),
+              version: project.version,
+              size: `${project.size.width}×${project.size.height}`
+            })}
           </p>
         </header>
         <main>
-          <p>{project.description || 'Keine Beschreibung.'}</p>
+          <p>{project.description || t('project.noDescription')}</p>
           <p className="project-path">{project.projectPath}</p>
           <div className="project-actions">
-            <button onClick={() => setView('workspace')}>Karte bearbeiten</button>
-            <button onClick={() => setView('compile')}>Kompilieren</button>
-            <button onClick={() => setView('test')}>In Zero-K testen</button>
-            <button onClick={() => setView('publish')}>Veröffentlichen</button>
+            <button onClick={() => setView('workspace')}>{t('project.edit')}</button>
+            <button onClick={() => setView('compile')}>{t('project.compile')}</button>
+            <button onClick={() => setView('test')}>{t('project.test')}</button>
+            <button onClick={() => setView('publish')}>{t('project.publish')}</button>
           </div>
           <button
+            className="secondary"
             onClick={() => {
               setProject(null)
               setView('project')
             }}
           >
-            Zurück zum Dashboard
+            {t('project.backToDashboard')}
           </button>
         </main>
       </div>
@@ -74,12 +88,15 @@ function App(): JSX.Element {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Zero-K Map Creator</h1>
-        <p className="subtitle">Custom Maps erstellen, bearbeiten, testen und veröffentlichen.</p>
+        <div className="header-row">
+          <h1>Zero-K Map Creator</h1>
+          <LanguageSelect />
+        </div>
+        <p className="subtitle">{t('dashboard.subtitle')}</p>
       </header>
       <main className="dashboard">
-        <button onClick={() => setShowNewProjectDialog(true)}>Neues Projekt</button>
-        <button onClick={handleOpenProject}>Projekt öffnen</button>
+        <button onClick={() => setShowNewProjectDialog(true)}>{t('dashboard.newProject')}</button>
+        <button onClick={handleOpenProject}>{t('dashboard.openProject')}</button>
         {error && <p className="error">{error}</p>}
       </main>
       {showNewProjectDialog && (

@@ -61,7 +61,8 @@ export function generateDiffuseTexture(
   heightmapWidth: number,
   heightmapHeight: number,
   textureWidth: number,
-  textureHeight: number
+  textureHeight: number,
+  onProgress?: (fraction: number) => void
 ): RgbaImage {
   const data = new Uint8Array(textureWidth * textureHeight * 4)
   // heightmap has +1 samples per square edge; texture covers the squares themselves.
@@ -71,6 +72,7 @@ export function generateDiffuseTexture(
   const sampleStep = 1 // world-texel step used for the slope normal, in heightmap-space units
 
   for (let ty = 0; ty < textureHeight; ty++) {
+    if (onProgress && ty % 64 === 0) onProgress(ty / textureHeight)
     const hy = ty * scaleY
     for (let tx = 0; tx < textureWidth; tx++) {
       const hx = tx * scaleX
@@ -117,7 +119,7 @@ function dot(a: [number, number, number], b: [number, number, number]): number {
 export function downsampleTo(image: RgbaImage, targetWidth: number, targetHeight: number): RgbaImage {
   if (image.width % targetWidth !== 0 || image.height % targetHeight !== 0) {
     throw new Error(
-      `Textur-Größe ${image.width}x${image.height} ist kein ganzzahliges Vielfaches des Ziels ${targetWidth}x${targetHeight}`
+      `Texture size ${image.width}x${image.height} is not an integer multiple of the target ${targetWidth}x${targetHeight}`
     )
   }
   const blockW = image.width / targetWidth

@@ -1,96 +1,69 @@
-import { mkdir, rm, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
-import { encodeSmf, encodeSmt } from '@zk-map/smf-format'
-import { heightmapResolution } from '@zk-map/shared-types'
-import { openProject } from '../project'
-import { loadTerrain } from '../terrain'
-import { loadGameplaySettings, loadMetalLayout, loadStartboxes, loadFeatures } from '../mapconfig'
-import { buildSmf } from './build-smf'
-import { buildLuaFiles } from './build-lua'
-import { packageSdd } from './package'
+import type { Worker } from 'node:worker_threads'
+import createCompileWorker from './worker?nodeWorker'
+import { getMainLanguage, t } from '../language'
+import type { CompileProgress, CompileResult, CompileWorkerData, CompileWorkerMessage } from './progress'
 
-export interface CompileResult {
-  sddPath: string
-  sd7Path: string
-  warnings: string[]
-  durationMs: number
-}
+export type { CompileProgress, CompileResult, CompileStage } from './progress'
+export { archiveBaseName } from './run'
 
-function sanitizeFileName(name: string): string {
-  const safe = name.trim().replace(/[\\/:*?"<>|]+/g, '_')
-  return safe || 'map'
-}
+/** Compiles started from the UI, keyed by project path, so they can be cancelled. */
+const activeWorkers = new Map<string, Worker>()
+const cancelledWorkers = new WeakSet<Worker>()
 
-export async function compileProject(projectPath: string): Promise<CompileResult> {
-  const startedAt = Date.now()
-  const warnings: string[] = []
+export class CompileCancelledError extends Error {}
 
-  const project = await openProject(projectPath)
-  const { size } = project
-
-  const mapWidthSquares = size.width * 64
-  const mapHeightSquares = size.height * 64
-  if (mapWidthSquares % 128 !== 0 || mapHeightSquares % 128 !== 0) {
-    throw new Error(
-      `Ungültige Kartengröße ${size.width}x${size.height}: Breite und Höhe müssen gerade Zahlen sein ` +
-        `(Spring verlangt, dass die Kartenbreite/-höhe in Squares durch 128 teilbar ist).`
-    )
+/** Compiles a project in a separate worker thread so the UI stays responsive, reporting progress
+ * along the way. Rejects with CompileCancelledError if cancelCompile() is called meanwhile. */
+export function compileProject(
+  projectPath: string,
+  onProgress: (progress: CompileProgress) => void = () => {}
+): Promise<CompileResult> {
+  if (activeWorkers.has(projectPath)) {
+    return Promise.reject(new Error(t('compile.error.alreadyRunning')))
   }
 
-  const heightmapWidth = heightmapResolution(size.width)
-  const heightmapHeight = heightmapResolution(size.height)
+  const workerData: CompileWorkerData = { projectPath, language: getMainLanguage() }
+  const worker = createCompileWorker({ workerData })
+  activeWorkers.set(projectPath, worker)
 
-  const [heights, gameplay, startboxes, metalLayout, features] = await Promise.all([
-    loadTerrain(projectPath, heightmapWidth, heightmapHeight),
-    loadGameplaySettings(projectPath),
-    loadStartboxes(projectPath, mapWidthSquares * 8, mapHeightSquares * 8),
-    loadMetalLayout(projectPath),
-    loadFeatures(projectPath)
-  ])
+  return new Promise<CompileResult>((resolve, reject) => {
+    let settled = false
+    const finish = (fn: () => void): void => {
+      if (settled) return
+      settled = true
+      activeWorkers.delete(projectPath)
+      fn()
+    }
 
-  const safeName = sanitizeFileName(project.name)
-
-  const { smf, smt, skippedFeatureCount } = buildSmf({
-    project,
-    gameplay,
-    heights,
-    heightmapWidth,
-    heightmapHeight,
-    features,
-    tileFileName: `${safeName}.smt`
+    worker.on('message', (message: CompileWorkerMessage) => {
+      if (message.type === 'progress') onProgress(message.progress)
+      else if (message.type === 'result') {
+        finish(() => resolve(message.result))
+        void worker.terminate()
+      } else if (message.type === 'error') {
+        finish(() => reject(new Error(message.message)))
+        void worker.terminate()
+      }
+    })
+    worker.on('error', (err) => finish(() => reject(err)))
+    worker.on('exit', (code) => {
+      // Only reached if the worker stopped without posting a result (cancelled or crashed).
+      finish(() =>
+        reject(
+          cancelledWorkers.has(worker)
+            ? new CompileCancelledError(t('compile.cancelled'))
+            : new Error(t('compile.error.workerExited', { code }))
+        )
+      )
+    })
   })
-  if (skippedFeatureCount > 0) {
-    warnings.push(
-      `${skippedFeatureCount} Feature(s) ohne Typname wurden beim Kompilieren übersprungen.`
-    )
-  }
+}
 
-  const { mapInfoLua, startboxesLua, metalLayoutLua } = buildLuaFiles({
-    project,
-    gameplay,
-    startboxes,
-    metalLayout,
-    mapFileBaseName: safeName
-  })
-
-  const generatedDir = join(projectPath, 'generated')
-  const sddPath = join(generatedDir, `${safeName}.sdd`)
-  const sd7Path = join(generatedDir, `${safeName}.sd7`)
-
-  await rm(sddPath, { recursive: true, force: true })
-  await rm(sd7Path, { force: true })
-  await mkdir(join(sddPath, 'maps'), { recursive: true })
-  await mkdir(join(sddPath, 'mapconfig'), { recursive: true })
-
-  await Promise.all([
-    writeFile(join(sddPath, 'mapinfo.lua'), mapInfoLua, 'utf-8'),
-    writeFile(join(sddPath, 'maps', `${safeName}.smf`), encodeSmf(smf)),
-    writeFile(join(sddPath, 'maps', `${safeName}.smt`), encodeSmt(smt)),
-    writeFile(join(sddPath, 'mapconfig', 'map_startboxes.lua'), startboxesLua, 'utf-8'),
-    writeFile(join(sddPath, 'mapconfig', 'map_metal_layout.lua'), metalLayoutLua, 'utf-8')
-  ])
-
-  await packageSdd(sddPath, sd7Path)
-
-  return { sddPath, sd7Path, warnings, durationMs: Date.now() - startedAt }
+/** Stops a running compile for the given project. Returns false if none was running. */
+export function cancelCompile(projectPath: string): boolean {
+  const worker = activeWorkers.get(projectPath)
+  if (!worker) return false
+  cancelledWorkers.add(worker)
+  void worker.terminate()
+  return true
 }

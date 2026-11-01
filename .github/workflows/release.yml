@@ -1,64 +1,61 @@
 name: Release
 
+# Push a tag like "v0.2.0" to build all installers and publish them as a GitHub Release.
+# Tags with a suffix (e.g. "v0.2.0-beta.1") are published as pre-releases.
 on:
   push:
     tags:
       - 'v*'
 
 jobs:
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: windows-latest
-            dist-script: dist:win
-            artifact-glob: apps/desktop/release/*.exe
-          - os: macos-latest
-            dist-script: dist:mac
-            artifact-glob: apps/desktop/release/*.dmg
-          - os: ubuntu-latest
-            dist-script: dist:linux
-            artifact-glob: |
-              apps/desktop/release/*.AppImage
-              apps/desktop/release/*.deb
-
-    runs-on: ${{ matrix.os }}
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - id: v
+        shell: bash
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
-
-      - name: Build installer
-        run: pnpm --filter @zk-map/desktop ${{ matrix.dist-script }}
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: zero-k-map-creator-${{ matrix.os }}
-          path: ${{ matrix.artifact-glob }}
+  installers:
+    needs: version
+    uses: ./.github/workflows/build-installers.yml
+    with:
+      version: ${{ needs.version.outputs.version }}
+      retention-days: 3
 
   release:
-    needs: build
+    needs: installers
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Download all artifacts
+      - name: Download installers
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          merge-multiple: true
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/**/*
-          draft: true
+          files: artifacts/*
+          prerelease: ${{ contains(github.ref_name, '-') }}
           generate_release_notes: true
+          body: |
+            ## Downloads
+
+            | Platform | File |
+            | --- | --- |
+            | Windows 10/11 | `Zero-K-Map-Creator-*-windows-setup.exe` |
+            | macOS (Apple Silicon) | `Zero-K-Map-Creator-*-macos-arm64.dmg` |
+            | macOS (Intel) | `Zero-K-Map-Creator-*-macos-x64.dmg` |
+            | Linux | `Zero-K-Map-Creator-*-linux-x86_64.AppImage` or `.deb` |
+
+            > **macOS builds are untested** — the maintainer has no Mac. Feedback via GitHub issues is very welcome.
+
+            The installers are not code-signed yet:
+            - **Windows:** SmartScreen may warn about an unknown publisher → *More info* → *Run anyway*.
+            - **macOS:** after copying the app to *Applications*, run once in Terminal:
+              `xattr -cr "/Applications/Zero-K Map Creator.app"`
+            - **Linux (AppImage):** `chmod +x Zero-K-Map-Creator-*.AppImage` and run it.
