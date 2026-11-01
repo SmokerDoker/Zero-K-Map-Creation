@@ -7,7 +7,7 @@
  * whenever channels are anti-correlated (e.g. a red-to-green gradient), which produces a bogus
  * interpolation line and visibly wrong colors — PCA fit avoids that. Still not as high quality
  * as tools like NVDXT's "-quality_highest" mode; revisit if needed (see plan risk:
- * "DXT1-Kompressionsqualität").
+ * "DXT1 compression quality").
  */
 
 export interface RgbaImage {

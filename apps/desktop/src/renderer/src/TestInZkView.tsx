@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import type { MapProjectSummary } from '@zk-map/shared-types'
 import type { ZkInstallation } from '@zk-map/zk-locator'
+import { useI18n } from './i18n'
+import { formatError } from './errors'
+import { CompileProgressBar, useCompileProgress } from './CompileProgressBar'
 
 export interface TestInZkViewProps {
   project: MapProjectSummary
@@ -15,16 +18,12 @@ interface RunState {
   error?: string
 }
 
-const SOURCE_LABELS: Record<ZkInstallation['source'], string> = {
-  steam: 'Steam',
-  standalone: 'Standalone',
-  manual: 'Manuell gewählt'
-}
-
 export function TestInZkView({ project, onBack }: TestInZkViewProps): JSX.Element {
+  const { t } = useI18n()
   const [installations, setInstallations] = useState<ZkInstallation[] | null>(null)
   const [selectedDir, setSelectedDir] = useState<string | null>(null)
   const [run, setRun] = useState<RunState>({ status: 'idle' })
+  const progress = useCompileProgress(run.status === 'running')
 
   useEffect(() => {
     let cancelled = false
@@ -61,7 +60,7 @@ export function TestInZkView({ project, onBack }: TestInZkViewProps): JSX.Elemen
         warnings: result.warnings
       })
     } catch (err) {
-      setRun({ status: 'error', error: err instanceof Error ? err.message : String(err) })
+      setRun({ status: 'error', error: formatError(err) })
     }
   }
 
@@ -70,18 +69,17 @@ export function TestInZkView({ project, onBack }: TestInZkViewProps): JSX.Elemen
   return (
     <div className="app">
       <header className="app-header">
-        <h1>In Zero-K testen</h1>
-        <p className="subtitle">{project.name} · kompiliert, kopiert die Karte und startet Zero-K</p>
+        <h1>{t('test.title')}</h1>
+        <p className="subtitle">{t('test.subtitle', { name: project.name })}</p>
       </header>
       <main className="mapinfo-form">
         {installations === null ? (
-          <p className="loading">Suche nach Zero-K-Installationen…</p>
+          <p className="loading">{t('test.searching')}</p>
         ) : (
           <>
             {installations.length === 0 && (
               <p className="hint warning">
-                Keine Zero-K-Installation automatisch gefunden (Steam oder Standalone). Bitte den
-                Ordner manuell wählen.
+                {t('test.noneFound')}
               </p>
             )}
 
@@ -95,26 +93,27 @@ export function TestInZkView({ project, onBack }: TestInZkViewProps): JSX.Elemen
                     onChange={() => setSelectedDir(inst.installDir)}
                   />
                   <span className="zk-install-path">{inst.installDir}</span>
-                  <span className="zk-install-source">{SOURCE_LABELS[inst.source]}</span>
+                  <span className="zk-install-source">{t(`test.source.${inst.source}`)}</span>
                   {!inst.launcherPath && (
-                    <span className="hint warning">Launcher nicht gefunden — manuell starten</span>
+                    <span className="hint warning">{t('test.noLauncher')}</span>
                   )}
                 </label>
               ))}
             </div>
 
-            <button onClick={handlePickFolder}>Anderen Ordner wählen…</button>
+            <button className="secondary" onClick={handlePickFolder}>{t('test.pickFolder')}</button>
+
+            {run.status === 'running' && <CompileProgressBar progress={progress} />}
 
             {run.status === 'error' && <p className="error">{run.error}</p>}
 
             {run.status === 'done' && (
               <div className="compile-result">
-                <p>✓ Karte kopiert nach:</p>
+                <p>{t('test.copiedTo')}</p>
                 <p className="project-path">{run.copiedToPath}</p>
-                <p>{run.launched ? '✓ Zero-K wurde gestartet.' : '⚠ Zero-K konnte nicht automatisch gestartet werden — bitte manuell starten.'}</p>
+                <p>{run.launched ? t('test.launched') : t('test.notLaunched')}</p>
                 <p className="hint">
-                  Im Spiel: "Only featured maps" in den Einstellungen deaktivieren, dann im
-                  Skirmish-Menü die Karte manuell auswählen.
+                  {t('test.inGameHint')}
                 </p>
                 {run.warnings && run.warnings.length > 0 && (
                   <ul className="hint warning">
@@ -127,9 +126,11 @@ export function TestInZkView({ project, onBack }: TestInZkViewProps): JSX.Elemen
             )}
 
             <div className="dialog-actions">
-              <button onClick={onBack}>← Zurück</button>
+              <button className="secondary" onClick={onBack} disabled={run.status === 'running'}>
+                {t('common.back')}
+              </button>
               <button onClick={handleTest} disabled={!selected || run.status === 'running'}>
-                {run.status === 'running' ? 'Läuft…' : 'Kompilieren & Testen'}
+                {run.status === 'running' ? t('test.running') : t('test.start')}
               </button>
             </div>
           </>

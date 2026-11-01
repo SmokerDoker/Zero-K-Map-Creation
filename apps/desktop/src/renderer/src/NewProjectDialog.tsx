@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { MapProjectSummary } from '@zk-map/shared-types'
+import { useI18n } from './i18n'
+import { formatError } from './errors'
 
 interface NewProjectDialogProps {
   onClose: () => void
@@ -20,6 +22,7 @@ function isValidSize(n: number): boolean {
 const LARGE_SIZE_WARNING_THRESHOLD = 20
 
 export function NewProjectDialog({ onClose, onCreated }: NewProjectDialogProps): JSX.Element {
+  const { t } = useI18n()
   const [name, setName] = useState('')
   const [author, setAuthor] = useState('')
   const [description, setDescription] = useState('')
@@ -29,8 +32,8 @@ export function NewProjectDialog({ onClose, onCreated }: NewProjectDialogProps):
   const [error, setError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
 
-  // Vorbelegung mit dem OS-spezifischen Standardpfad (z.B. %APPDATA%\Zero-K Map Creator\Projects),
-  // manuelle Auswahl über "Wählen…" bleibt weiterhin möglich.
+  // Pre-fill with the OS-specific default location (e.g. %APPDATA%\Zero-K Map Creator\Projects);
+  // picking a different folder via "Choose…" is still possible.
   useEffect(() => {
     window.api.getDefaultProjectsDir().then(setParentDir)
   }, [])
@@ -43,15 +46,15 @@ export function NewProjectDialog({ onClose, onCreated }: NewProjectDialogProps):
   async function handleSubmit(event: React.FormEvent): Promise<void> {
     event.preventDefault()
     if (!parentDir) {
-      setError('Bitte zuerst einen Speicherort wählen.')
+      setError(t('newProject.error.noFolder'))
       return
     }
     if (!name.trim()) {
-      setError('Bitte einen Projektnamen eingeben.')
+      setError(t('newProject.error.noName'))
       return
     }
     if (!isValidSize(width) || !isValidSize(height)) {
-      setError('Breite und Höhe müssen gerade Zahlen ≥ 2 sein (Zero-K-Anforderung, siehe Hinweis).')
+      setError(t('newProject.error.invalidSize'))
       return
     }
 
@@ -67,7 +70,7 @@ export function NewProjectDialog({ onClose, onCreated }: NewProjectDialogProps):
       })
       onCreated(project)
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(formatError(err))
     } finally {
       setCreating(false)
     }
@@ -76,26 +79,26 @@ export function NewProjectDialog({ onClose, onCreated }: NewProjectDialogProps):
   return (
     <div className="dialog-backdrop">
       <form className="dialog" onSubmit={handleSubmit}>
-        <h2>Neues Projekt</h2>
+        <h2>{t('newProject.title')}</h2>
 
         <label>
-          Name
+          {t('newProject.name')}
           <input value={name} onChange={(e) => setName(e.target.value)} autoFocus />
         </label>
 
         <label>
-          Autor
+          {t('newProject.author')}
           <input value={author} onChange={(e) => setAuthor(e.target.value)} />
         </label>
 
         <label>
-          Beschreibung
+          {t('newProject.description')}
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} />
         </label>
 
         <div className="size-row">
           <label>
-            Breite (z.B. 8 für "8x8")
+            {t('newProject.width')}
             <input
               type="number"
               min={2}
@@ -105,7 +108,7 @@ export function NewProjectDialog({ onClose, onCreated }: NewProjectDialogProps):
             />
           </label>
           <label>
-            Höhe (z.B. 8 für "8x8")
+            {t('newProject.height')}
             <input
               type="number"
               min={2}
@@ -116,24 +119,20 @@ export function NewProjectDialog({ onClose, onCreated }: NewProjectDialogProps):
           </label>
         </div>
         <p className="hint">
-          Zero-K-Größenangabe: 1 Einheit = 64 Squares (8 → 512×512 Squares). Muss jeweils eine
-          gerade Zahl sein, sonst lehnt Spring die Karte beim Kompilieren ab.
+          {t('newProject.sizeHint')}
         </p>
         {(width > LARGE_SIZE_WARNING_THRESHOLD || height > LARGE_SIZE_WARNING_THRESHOLD) && (
           <p className="hint warning">
-            Große Karten wurden mit unserem Compiler noch nicht getestet — die
-            Textur-Generierung wird mit der Fläche quadratisch langsamer und könnte sehr lange
-            dauern oder hängen bleiben. (Das ist keine Aussage über Zero-Ks eigenes Limit, das
-            konnte ich nicht verlässlich klären.)
+            {t('newProject.largeWarning')}
           </p>
         )}
 
         <label>
-          Speicherort
+          {t('newProject.location')}
           <div className="folder-row">
-            <span>{parentDir ?? 'Kein Ordner gewählt'}</span>
+            <span>{parentDir ?? t('newProject.noFolder')}</span>
             <button type="button" onClick={handleChooseFolder}>
-              Wählen…
+              {t('newProject.choose')}
             </button>
           </div>
         </label>
@@ -142,10 +141,10 @@ export function NewProjectDialog({ onClose, onCreated }: NewProjectDialogProps):
 
         <div className="dialog-actions">
           <button type="button" onClick={onClose}>
-            Abbrechen
+            {t('common.cancel')}
           </button>
           <button type="submit" disabled={creating}>
-            {creating ? 'Wird erstellt…' : 'Erstellen'}
+            {creating ? t('newProject.creating') : t('newProject.create')}
           </button>
         </div>
       </form>

@@ -18,7 +18,7 @@ export interface BlankSmfOptions {
 export function createBlankSmf(options: BlankSmfOptions): SmfMap {
   const { mapWidth, mapHeight, tileFileName } = options
   if (mapWidth % 16 !== 0 || mapHeight % 16 !== 0) {
-    throw new Error('mapWidth/mapHeight müssen Vielfache von 16 sein')
+    throw new Error('mapWidth/mapHeight must be multiples of 16')
   }
 
   const heightMapLength = (mapWidth + 1) * (mapHeight + 1)
